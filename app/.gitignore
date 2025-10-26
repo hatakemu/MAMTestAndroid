@@ -1,0 +1,17 @@
+# Gradle
+.gradle/
+build/
+
+# Android Studio
+*.iml
+.idea/
+
+# Local SDK path (PCごとに違うためコミットしない)
+local.properties
+
+# Keystore（今回はコミットしたい場合はこの行をコメントアウト）
+# *.keystore
+# *.jks
+
+# Logs
+*.log
