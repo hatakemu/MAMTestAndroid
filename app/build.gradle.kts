@@ -63,7 +63,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // MSAL（Microsoft Authentication Library for Android）
-    implementation("com.microsoft.identity.client:msal:5.+")
+    implementation("com.microsoft.identity.client:msal:6.+")
     // Graph 呼び出し用（軽量に REST 直叩き）
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // （JSON パースが必要になったら）
