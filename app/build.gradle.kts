@@ -7,7 +7,7 @@ plugins {
 android {
     namespace = "com.hatakemu.android.mamtest"
     compileSdk {
-        version = release(34)
+        version = release(36)
     }
 
     defaultConfig {
