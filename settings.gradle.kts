@@ -16,6 +16,15 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        
+        // Surface Duo SDK（Azure DevOps の公開フィード）
+        maven {
+            url = uri("https://pkgs.dev.azure.com/MicrosoftDeviceSDK/DuoSDK-Public/_packaging/Duo-SDK-Feed/maven/v1")
+            name = "Duo-SDK-Feed"
+        }
+
+    }
+
     }
 }
 

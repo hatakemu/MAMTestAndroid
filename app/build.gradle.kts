@@ -29,6 +29,10 @@ android {
             )
         }
     }
+    
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.7.0"
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -57,4 +61,12 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // MSAL（Microsoft Authentication Library for Android）
+    implementation("com.microsoft.identity.client:msal:5.+")
+    // Graph 呼び出し用（軽量に REST 直叩き）
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    // （JSON パースが必要になったら）
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
 }
