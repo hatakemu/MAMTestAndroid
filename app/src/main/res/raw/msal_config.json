@@ -1,7 +1,8 @@
 {
   "client_id": "88b7095c-bc83-4838-ae06-f2fcbbc88b9e",
   "authorization_user_agent": "DEFAULT",
-  "redirect_uri": "msauth://com.hatakemu.android.mamtest/Nli7ogtDVf4QgBfSiuIrWDWEymU=", 
+  "redirect_uri": "msauth://com.hatakemu.android.mamtest/Nli7ogtDVf4QgBfSiuIrWDWEymU%3D",
+  "account_mode": "SINGLE",
   "authorities": [
     {
       "type": "AAD",
