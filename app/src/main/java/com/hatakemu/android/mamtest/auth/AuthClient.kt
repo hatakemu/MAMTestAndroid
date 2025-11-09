@@ -2,57 +2,79 @@ package com.hatakemu.android.mamtest.auth
 
 import android.app.Activity
 import android.content.Context
+import com.hatakemu.android.mamtest.R
 import com.microsoft.identity.client.AuthenticationCallback
 import com.microsoft.identity.client.ISingleAccountPublicClientApplication
 import com.microsoft.identity.client.PublicClientApplication
-import com.microsoft.identity.client.SignInParameters
 import com.microsoft.identity.client.Prompt
+import com.microsoft.identity.client.SignInParameters
 import com.microsoft.identity.client.exception.MsalException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.hatakemu.android.mamtest.R
 
 /**
- * MSAL 6.x 最終版 AuthClient
+ * MSAL (Android) 6.x シングルアカウント PCA ラッパー
  *
- * - サインイン: SignInParameters + app.signIn(params)
- * - サインアウト: app.signOut(callback)
+ * - 初期化: getOrCreate(context)
+ * - 取得   : current()
+ * - 対話サインイン: signInInteractive(...)
+ * - サインアウト: signOut(...)
  *
- * 注意:
- *  - Interactive な API は UI スレッドから呼ばれますが、ここでは suspend 化しつつ、
- *    実処理は MSAL 側のコールバックで完結します（UI は呼び出し側でハンドリング）。
- *  - getOrCreate() は初回のみ MSAL クライアントを生成し、以降はキャッシュを返します。
+ * 注意：
+ * - msal_config.json は res/raw/msal_config.json に配置し、R.raw.msal_config で参照します。
+ * - シングルアカウント PCA はアプリ全体で 1 インスタンスに保ちます。
  */
 object AuthClient {
+
+    @Volatile
     private var client: ISingleAccountPublicClientApplication? = null
 
     /**
-     * MSAL クライアントの初期化／取得
-     * - 公開設定は res/raw/msal_config.json（例: R.raw.msal_config）を前提
+     * 現在保持している MSAL シングルアカウント PCA を返します（未初期化なら null）。
+     * MyMAMApp など、既に初期化済み前提で「存在チェックだけしたい」箇所で使います。
+     */
+    fun current(): ISingleAccountPublicClientApplication? = client
+
+    /**
+     * MSAL クライアントの取得（なければ作成）。
+     * - I/O を伴うので Dispatchers.IO で実行します。
+     * - マルチスレッド安全（ダブルチェック + synchronized）。
      */
     suspend fun getOrCreate(context: Context): ISingleAccountPublicClientApplication {
+        current()?.let { return it }
+
         return withContext(Dispatchers.IO) {
-            if (client == null) {
-                client = PublicClientApplication.createSingleAccountPublicClientApplication(
-                    context,
-                    R.raw.msal_config
-                )
+            current() ?: synchronized(this@AuthClient) {
+                current() ?: PublicClientApplication.createSingleAccountPublicClientApplication(
+                    /* context = */ context,
+                    /* configResId = */ R.raw.msal_config
+                ).also { created ->
+                    client = created
+                }
             }
-            client!!
         }
     }
 
     /**
-     * 6.x 推奨の対話的サインイン。
+     * クライアントが必要な処理を安全に行うためのヘルパ。
+     * - 必要なら初期化し、ラムダにクライアントを渡します。
+     */
+    suspend inline fun <T> withClient(
+        context: Context,
+        crossinline block: (ISingleAccountPublicClientApplication) -> T
+    ): T {
+        val app = getOrCreate(context)
+        return block(app)
+    }
+
+    /**
+     * 6.x 推奨の SignInParameters で対話サインイン。
      *
-     * 旧 API（signIn(activity, loginHint, scopes, callback)）は非推奨のため使用しません。
-     * 必要な情報は SignInParameters にまとめて渡します。
-     *
-     * @param activity  表示中の Activity（必須）
-     * @param scopes    要求スコープ（例: arrayOf("https://graph.microsoft.com/.default")）
-     * @param callback  結果を受け取る AuthenticationCallback
-     * @param loginHint 任意のログインヒント（メールアドレス等）
-     * @param prompt    任意のプロンプト（既定は SELECT_ACCOUNT）
+     * @param activity   UI スレッド上の Activity（必須）
+     * @param scopes     要求スコープ（例: arrayOf("https://graph.microsoft.com/.default")）
+     * @param callback   AuthenticationCallback
+     * @param loginHint  任意のログインヒント
+     * @param prompt     既定は SELECT_ACCOUNT
      */
     suspend fun signInInteractive(
         activity: Activity,
@@ -63,7 +85,6 @@ object AuthClient {
     ) {
         val app = getOrCreate(activity.applicationContext)
 
-        // 6.x では SignInParameters を用いて signIn() を呼び出す
         val params = SignInParameters.builder()
             .withActivity(activity)
             .withScopes(scopes.toMutableList())
@@ -76,22 +97,22 @@ object AuthClient {
             }
             .build()
 
+        // 6.x：SignInParameters を渡して signIn() を呼ぶ
         app.signIn(params)
     }
 
     /**
-     * サインアウト。
-     * - シングルアカウントモードの signOut はコールバックで完了通知を返します。
-     * - 呼び出し側（UI）の状態更新はコールバック後に行ってください。
+     * サインアウト。コールバックは MSAL 側から呼ばれます。
      */
     suspend fun signOut(activity: Activity) {
         val app = getOrCreate(activity.applicationContext)
         app.signOut(object : ISingleAccountPublicClientApplication.SignOutCallback {
             override fun onSignOut() {
-                // 必要であればクリーンアップ処理をここに
+                // 必要ならクリーンアップ処理
             }
+
             override fun onError(exception: MsalException) {
-                // ログ出力など（呼び出し側でもハンドリングしてください）
+                // ログ等
             }
         })
     }

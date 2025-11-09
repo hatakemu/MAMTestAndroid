@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="intune_account_disallowed">องค์กรของคุณไม่อนุญาตให้บัญชีนี้ลงชื่อเข้าใช้แอปนี้</string>
+    <string name="intune_account_disallowed_fmt">องค์กรของคุณไม่อนุญาตให้บัญชีนี้ลงชื่อเข้าใช้แอปนี้\n\n%1$s จะไม่ถูกเพิ่ม</string>
+    <string name="intune_account_removed_fmt">องค์กรของคุณไม่อนุญาตให้บัญชีนี้ลงชื่อเข้าใช้แอปนี้\n\n%1$s จะถูกลบออก</string>
+    <string name="intune_allowed_account_explanation">องค์กรของคุณอนุญาตให้บางบัญชีเท่านั้นที่สามารถลงชื่อเข้าใช้แอปนี้ได้</string>
+    <string name="intune_allowed_accounts_description">เฉพาะบัญชีที่อยู่ในรายการเท่านั้นที่สามารถลงชื่อเข้าใช้ได้</string>
+    <string name="intune_allowed_accounts_explanation_all_added">ลงชื่อเข้าใช้บัญชีทั้งหมดที่ได้รับอนุญาตโดยองค์กรของคุณแล้ว</string>
+    <string name="intune_allowed_accounts_title">บัญชีที่อนุญาต</string>
+    <string name="wg_offline_branding_managed_by">จัดการโดยองค์กรของคุณ</string>
+    <string name="wg_offline_cancel">ยกเลิก</string>
+    <string name="wg_offline_close">ปิด</string>
+    <string name="wg_offline_get_the_app">ไปที่ Store</string>
+    <string name="wg_offline_go_back">ย้อนกลับ</string>
+    <string name="wg_offline_initialization_failure">เกิดปัญหาในการเปิดใช้แอปของคุณ ลองอัปเดตแอปหรือแอป Microsoft Intune Company Portal หากคุณต้องการความช่วยเหือ ให้ติดต่อทีมสนับสนุนขององค์กรของคุณ</string>
+    <string name="wg_offline_learn_more">เรียนรู้เพิ่มเติม</string>
+    <string name="wg_offline_mamca_failed_message">ไม่สามารถป้องกันแอปนี้ได้เนื่องจากการเชื่อมต่อกับบริการไม่สมบูรณ์ โปรดลองอีกครั้ง</string>
+    <string name="wg_offline_mamca_failed_title">ลองอีกครั้ง</string>
+    <string name="wg_offline_must_restart">ขณะนี้ทีมสนับสนุนขององค์กรของคุณกำลังช่วยคุณปกป้องข้อมูลที่ทำงานหรือโรงเรียนในแอปนี้ รีสตาร์ตแอปเพื่อดำเนินการต่อ</string>
+    <string name="wg_offline_ok">ตกลง</string>
+    <string name="wg_offline_policy_required_message">แอปนี้ยังไม่ได้รับการตั้งค่าเพื่อให้คุณใช้งาน ติดต่อทีมสนับสนุนขององค์กรของคุณเพื่อขอความช่วยเหลือ</string>
+    <string name="wg_offline_sharing_blocked_dialog_text">นโยบายองค์กรของคุณไม่อนุญาตการแชร์นี้</string>
+    <string name="wg_offline_sharing_blocked_dialog_title">ไม่อนุญาตการแชร์</string>
+    <string name="wg_offline_show_diagnostics_message">ข้อมูลการวินิจฉัยไม่พร้อมใช้งานสำหรับอุปกรณ์เครื่องนี้ ติดต่อทีมสนับสนุนขององค์กรของคุณเพื่อขอความช่วยเหลือ</string>
+    <string name="wg_offline_ssp_install_required_message">เมื่อต้องการใช้บัญชีที่ทำงานหรือโรงเรียนของคุณกับแอปนี้ คุณต้องติดตั้งแอป Microsoft Intune Company Portal ให้แตะ \"ไปที่ Store\" เพื่อดำเนินการต่อ</string>
+    <string name="wg_offline_ssp_install_required_message_ngms">เมื่อต้องการใช้บัญชีที่ทํางานหรือโรงเรียนของคุณกับแอปนี้ คุณต้องติดตั้งแอป Microsoft Intune Company Portal เลือก “เรียนรู้เพิ่มเติม” เพื่อกําหนดตําแหน่งที่คุณสามารถรับแอป Company Portal ได้</string>
+    <string name="wg_offline_ssp_removed_notify_system_wipe">องค์กรของคุณได้ลบข้อมูลที่เกี่ยวข้องกับแอปนี้ออกเนื่องจากมีการลบข้อมูลหรือแอปพลิเคชัน Microsoft Intune Company Portal ออก ขณะนี้แอปพลิเคชันนี้จะปิดการทำงาน เมื่อต้องการเชื่อมต่อใหม่ คุณต้องลงชื่อเข้าใช้ด้วยบัญชีที่ทำงานหรือโรงเรียนของคุณ</string>
+    <string name="wg_offline_ssp_removed_notify_wipe">องค์กรของคุณได้ลบข้อมูลที่เกี่ยวข้องกับแอปนี้ออกเนื่องจากมีการลบข้อมูลหรือแอปพลิเคชัน Microsoft Intune Company Portal ออก เมื่อต้องการเชื่อมต่อใหม่ คุณต้องลงชื่อเข้าใช้ด้วยบัญชีที่ทำงานหรือโรงเรียนของคุณ</string>
+</resources>

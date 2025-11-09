@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.microsoft.intune.mam") //MAM プラグイン
 }
 
 android {
@@ -69,5 +70,11 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // （JSON パースが必要になったら）
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    // Intune SDK
+    implementation(files("libs/Microsoft.Intune.MAM.SDK.aar"))
+}
 
+intunemam {
+    report.set(true)
+    verify.set(true)
 }
