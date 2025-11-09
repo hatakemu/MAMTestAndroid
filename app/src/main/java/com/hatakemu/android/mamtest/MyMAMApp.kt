@@ -1,132 +1,212 @@
 package com.hatakemu.android.mamtest
 
+import android.util.Log
 import com.microsoft.intune.mam.client.app.MAMApplication
+import com.microsoft.intune.mam.client.app.MAMComponents
+import com.microsoft.intune.mam.policy.MAMEnrollmentManager
+import com.microsoft.intune.mam.policy.MAMServiceAuthenticationCallback
+import com.microsoft.intune.mam.policy.MAMServiceAuthenticationCallbackExtended
 import com.microsoft.identity.client.IAccount
 import com.microsoft.identity.client.AcquireTokenSilentParameters
 import com.microsoft.identity.client.exception.MsalException
-import java.lang.reflect.Proxy
-import java.lang.reflect.Method
 import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
 
 /**
- * 最新 SDK(v12.x) 環境で AAR 内に MAMStrictMode/MAMEnrollmentManager が見えず
- * 直接 import できない場合でも確実に初期化できるよう、反射で処理します。
- *
- * - Strict Mode: クラスが見つかるときのみ enable() を呼ぶ
- * - 認証コールバック: MAMServiceAuthenticationCallbackExtended を Proxy で実装
- * - 登録(register)/解除(unregister): UI 側（MSAL サインイン成功/サインアウト）で呼んでください
- *
- * 必要前提:
- * - MSAL のシングルアカウント PCA を返す AuthClient.current() が利用可能であること
+ * MSAL -> Intune MAM SDK トークン供給のアプリ側実装（Stage 4 準拠）。
+ * - scopes は resourceId + "/.default"
+ * - authority は account.authority を優先、null/空なら TENANT_AUTHORITY でフォールバック
  */
+private const val TENANT_ID =
+    "516f6912-3d81-47b6-8866-20353e6bfdda"
+
+private const val TENANT_AUTHORITY =
+    "https://login.microsoftonline.com/$TENANT_ID"
+
 class MyMAMApp : MAMApplication() {
 
     override fun onMAMCreate() {
         super.onMAMCreate()
-
-        // 1) Strict Mode を (存在する場合のみ) 有効化
-        tryEnableMAMStrictMode()
-
-        // 2) 認証コールバックを MAM SDK へ登録（反射で動的に実施）
-        tryRegisterAuthCallback()
+        enableMAMStrictModeIfAvailable()
+        registerMAMAuthCallback()
     }
 
-    /**
-     * MAM Strict Mode の有効化を反射で試みる。
-     * - クラスが見つからない/メソッドがない場合は黙ってスキップ（本番は無効でも可）
-     * 参考: Stage 4 の必須要件（開発・検証時）
-     */
-    private fun tryEnableMAMStrictMode() {
+    /** MAM Strict Mode を（存在時のみ）有効化 */
+    private fun enableMAMStrictModeIfAvailable() {
         runCatching {
             val cls = Class.forName("com.microsoft.intune.mam.client.content.MAMStrictMode")
             val m = cls.getMethod("enable")
             m.invoke(null)
+            Log.d("MAM-SDK", "MAMStrictMode.enable() called")
         }.onFailure {
-            // MAMStrictMode が AAR から見えない場合はスキップ（ログ出力したい場合はここで）
+            Log.d("MAM-SDK", "MAMStrictMode not available; skip")
         }
     }
 
     /**
-     * MAMServiceAuthenticationCallbackExtended を動的 Proxy で実装し、
-     * MAMEnrollmentManager.registerAuthenticationCallback(...) へ反射で登録します。
-     *
-     * 認証コールバックは Stage 4 で必須（SDK が Intune サービスへアクセスする度に
-     * MSAL のアクセストークンを供給する）
+     * 認証コールバックを登録。
+     * - mgr が null の可能性に対応（明示チェック）
+     * - 引数型差異に備え、Callback/CallbackExtended の **両方**を実装する Proxy を渡す
      */
-    private fun tryRegisterAuthCallback() {
+    private fun registerMAMAuthCallback() {
+        val mgr: MAMEnrollmentManager? = MAMComponents.get(MAMEnrollmentManager::class.java)
+        if (mgr == null) {
+            Log.w("MAM-SDK", "MAMEnrollmentManager is null. Check SDK/Plugin integration and Manifest Application name.")
+            return
+        }
+
+        val proxy = Proxy.newProxyInstance(
+            this::class.java.classLoader,
+            arrayOf(
+                MAMServiceAuthenticationCallback::class.java,
+                MAMServiceAuthenticationCallbackExtended::class.java
+            ),
+            AuthenticationCallbackHandler()
+        )
+
+        // まず Extended を試す → ダメなら無印
         runCatching {
-            // ---- 反射で必要クラスを解決 ----
-            val componentsCls = Class.forName("com.microsoft.intune.mam.client.app.MAMComponents")
-            val enrollmentMgrCls = Class.forName("com.microsoft.intune.mam.client.app.MAMEnrollmentManager")
-            val callbackIfaceCls =
-                Class.forName("com.microsoft.intune.mam.client.app.MAMServiceAuthenticationCallbackExtended")
-
-            // MAMComponents.get(MAMEnrollmentManager.class)
-            val getMethod = componentsCls.getMethod("get", Class::class.java)
-            val enrollmentMgr = getMethod.invoke(null, enrollmentMgrCls)
-
-            // 認証コールバックの Proxy を作成
-            val callbackProxy = Proxy.newProxyInstance(
-                callbackIfaceCls.classLoader,
-                arrayOf(callbackIfaceCls),
-                AuthenticationCallbackHandler()
+            val m = MAMEnrollmentManager::class.java.getMethod(
+                "registerAuthenticationCallback",
+                MAMServiceAuthenticationCallbackExtended::class.java
             )
-
-            // enrollmentMgr.registerAuthenticationCallback(callback)
-            val registerMethod = enrollmentMgrCls.getMethod("registerAuthenticationCallback", callbackIfaceCls)
-            registerMethod.invoke(enrollmentMgr, callbackProxy)
+            m.invoke(mgr, proxy)
+            Log.d("MAM-SDK", "registerAuthenticationCallback(Extended) registered")
         }.onFailure {
-            // AAR に Manager/Callback が見えない場合は登録できないためスキップ
-            // （この状況では UI 側の registerAccountForMAM 呼び出しのみで進め、ポリシー適用に必要な
-            //  トークン供給が発生した時点で再度 SDK 側からコールバック登録の必要性がログ出力されます）
+            runCatching {
+                val m2 = MAMEnrollmentManager::class.java.getMethod(
+                    "registerAuthenticationCallback",
+                    MAMServiceAuthenticationCallback::class.java
+                )
+                m2.invoke(mgr, proxy)
+                Log.d("MAM-SDK", "registerAuthenticationCallback(Callback) registered")
+            }.onFailure { ex2 ->
+                Log.e("MAM-SDK", "Failed to register auth callback", ex2)
+            }
         }
     }
 
     /**
-     * MAMServiceAuthenticationCallbackExtended のメソッド群を動的に処理する InvocationHandler。
-     *
-     * 期待シグネチャ（SDK 側から呼ばれる）:
-     *   acquireToken(upn: String, aadId: String, tenantId: String, authority: String, resourceId: String): String?
-     *
-     * 実装内容:
-     *   - MSAL のサイレント取得で "$resourceId/.default" スコープのアクセストークンを返す
+     * SDK -> アプリ向け認証コールバックの実装。
+     * acquireToken(upn, aadId, tenantId, authority, resourceId) を受け、
+     * scopes = { resourceId + "/.default" } で MSAL Silent を実行し、accessToken を返す。
      */
     private class AuthenticationCallbackHandler : InvocationHandler {
         override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {
-            if (args == null) return null
+            if (method.name != "acquireToken") return null
+            if (args == null || args.size < 5) return null
 
-            return when (method.name) {
-                "acquireToken" -> {
-                    val upn = args.getOrNull(0) as? String ?: return null
-                    val aadId = args.getOrNull(1) as? String ?: return null
-                    val tenantId = args.getOrNull(2) as? String ?: return null
-                    val authority = args.getOrNull(3) as? String ?: return null
-                    val resourceId = args.getOrNull(4) as? String ?: return null
+            val upn           = args[0] as? String ?: return null
+            val aadId         = args[1] as? String ?: return null
+            val tenantIdParam = args[2] as? String
+            val authorityArg  = args[3] as? String
+            val resourceId    = args[4] as? String ?: return null
 
-                    // MSAL シングルアカウントから対象アカウントを特定
-                    val msal = com.hatakemu.android.mamtest.auth.AuthClient.current() ?: return null
-                    val account: IAccount? = runCatching {
-                        msal.currentAccount?.currentAccount?.let { current ->
-                            if (current.id == aadId) current else null
-                        }
-                    }.getOrNull()
+            val msal = com.hatakemu.android.mamtest.auth.AuthClient.current() ?: return null
+            val account: IAccount = msal.currentAccount?.currentAccount?.let { current ->
+                if (current.id == aadId || current.username.equals(upn, ignoreCase = true)) current else null
+            } ?: return null
 
-                    if (account == null) return null
+            // authority は account.authority を優先、null/空なら SDK から、さらに null/空ならテナント固定
+            val effectiveAuthority = when {
+                !account.authority.isNullOrBlank() -> account.authority!!
+                !authorityArg.isNullOrBlank()      -> authorityArg!!
+                else                               -> TENANT_AUTHORITY
+            }
 
-                    val scopes = listOf("$resourceId/.default")
-                    return try {
-                        val params = AcquireTokenSilentParameters.Builder()
-                            .forAccount(account)
-                            .fromAuthority(account.authority ?: authority)
-                            .withScopes(scopes)
-                            .build()
-                        val result = msal.acquireTokenSilent(params)
-                        result?.accessToken
-                    } catch (_: MsalException) {
-                        null
-                    }
-                }
-                else -> null
+            val scopes = listOf("$resourceId/.default")
+
+            Log.d(
+                "MAM-Token",
+                "Preparing silent token for MAM: upn=$upn, aadId=$aadId, " +
+                        "tenant=${tenantIdParam ?: TENANT_ID}, resourceId=$resourceId, " +
+                        "authority=$effectiveAuthority, scopes=${scopes.joinToString()}"
+            )
+
+            return try {
+                val params = AcquireTokenSilentParameters.Builder()
+                    .forAccount(account)
+                    .fromAuthority(effectiveAuthority)
+                    .withScopes(scopes)
+                    .build()
+
+                val result = msal.acquireTokenSilent(params)
+                val token = result?.accessToken ?: return null
+
+                Log.i(
+                    "MAM-Token",
+                    "Token acquired for MAM. " +
+                            "resourceId=$resourceId, scopes=${scopes.joinToString()}, " +
+                            "authority=$effectiveAuthority, token=$token"
+                )
+
+                token
+            } catch (_: MsalException) {
+                null
+            }
+        }
+    }
+}
+
+/**
+ * MAM 登録ユーティリティ。
+ * SDK の 2 つのシグネチャ（(upn, aadId, tenantId?) / (upn, aadId, tenantId?, authority)）に合わせて呼び分ける。
+ */
+object MAMInterop {
+
+    /**
+     * @param upn        UPN（例: user@contoso.com）
+     * @param aadId      IAccount.id（例: GUID）
+     * @param tenantId   既知のテナント ID。未指定なら既定の TENANT_ID を使用
+     * @param authority  既知の Authority。未指定なら既定の TENANT_AUTHORITY を使用
+     * @return ログ用の文字列（成功/失敗を含む）
+     */
+    fun register(
+        upn: String,
+        aadId: String,
+        tenantId: String? = null,
+        authority: String? = null
+    ): String {
+        val mgr: MAMEnrollmentManager? = MAMComponents.get(MAMEnrollmentManager::class.java)
+        if (mgr == null) {
+            val msg = "registerAccountForMAM failed: MAMEnrollmentManager is null"
+            Log.e("MAM-Enroll", msg)
+            return msg
+        }
+
+        val tId = tenantId ?: TENANT_ID
+        val auth = authority ?: TENANT_AUTHORITY
+
+        // まず 4 引数版 (upn, aadId, tenantId?, authority) を試す → ダメなら 3 引数版へ
+        return runCatching {
+            val m4 = MAMEnrollmentManager::class.java.getMethod(
+                "registerAccountForMAM",
+                String::class.java,  // upn
+                String::class.java,  // aadId
+                String::class.java,  // tenantId (nullable 可)
+                String::class.java   // authority
+            )
+            val res = m4.invoke(mgr, upn, aadId, tId, auth)
+            val msg = "registerAccountForMAM(upn=$upn, aadId=$aadId, tenantId=$tId, authority=$auth) -> ${res?.toString() ?: "void"}"
+            Log.i("MAM-Enroll", msg)
+            msg
+        }.getOrElse { ex4 ->
+            runCatching {
+                val m3 = MAMEnrollmentManager::class.java.getMethod(
+                    "registerAccountForMAM",
+                    String::class.java,  // upn
+                    String::class.java,  // aadId
+                    String::class.java   // tenantId (nullable 可)
+                )
+                val res = m3.invoke(mgr, upn, aadId, tId)
+                val msg = "registerAccountForMAM(upn=$upn, aadId=$aadId, tenantId=$tId) -> ${res?.toString() ?: "void"}"
+                Log.i("MAM-Enroll", msg)
+                msg
+            }.getOrElse { ex3 ->
+                val msg = "registerAccountForMAM failed: ${ex3.javaClass.simpleName}: ${ex3.message}"
+                Log.e("MAM-Enroll", msg, ex3)
+                msg
             }
         }
     }
