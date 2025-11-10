@@ -45,7 +45,7 @@ private const val TENANT_AUTHORITY =
     "https://login.microsoftonline.com/516f6912-3d81-47b6-8866-20353e6bfdda"
 
 /** Stage 4 の対話同意（interactive）で使う MAM リソース */
-private const val MAM_RESOURCE_ID = "https://manage.microsoft.com"
+private const val MAM_RESOURCE_ID = "https://msmamservice.api.application"
 
 class MainActivity : ComponentActivity() {
 
@@ -284,7 +284,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) { Text("Sign out") }
 
-                            // --- MAM Enroll（既存名: Dump tokens & Enroll → MAM Enroll） ---
+                            // --- MAM Enroll ---
                             Button(
                                 enabled = isSignedIn,
                                 onClick = {
@@ -309,7 +309,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                             // デバッグ出力（本番はマスク推奨）
                                             Log.i(
-                                                "Sign-in Token",
+                                                "Graph Token",
                                                 "authority=${account.authority ?: TENANT_AUTHORITY} " +
                                                         "scope=${graphDefaultScopes.joinToString()} token=${graphToken}"
                                             )
