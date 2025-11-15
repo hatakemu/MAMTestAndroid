@@ -24,13 +24,11 @@ import com.microsoft.identity.client.AuthenticationCallback
 import com.microsoft.identity.client.IAuthenticationResult
 import com.microsoft.identity.client.Logger
 import com.microsoft.identity.client.exception.MsalException
-import com.microsoft.identity.client.AcquireTokenSilentParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/** LocalContext から現在の Activity を安全に取得 */
 private fun Context.findActivity(): Activity? {
     var ctx: Context = this
     while (ctx is ContextWrapper) {
@@ -40,16 +38,17 @@ private fun Context.findActivity(): Activity? {
     return null
 }
 
-/** Silent 取得時のフォールバック用（tenant 固定 Authority） */
-private const val TENANT_AUTHORITY =
-    "https://login.microsoftonline.com/516f6912-3d81-47b6-8866-20353e6bfdda"
 
-/** Stage 4 の対話同意（interactive）で使う MAM リソース */
-private const val MAM_RESOURCE_ID = "https://msmamservice.api.application"
+// Sign-in 用の MAM リソース
+private const val MAM_SIGNIN_SCOPE = "https://msmamservice.api.application/.default"
+private const val TENANT_ID = "516f6912-3d81-47b6-8866-20353e6bfdda"
+private const val TENANT_AUTHORITY = "https://login.microsoftonline.com/$TENANT_ID"
+
+
 
 class MainActivity : ComponentActivity() {
 
-    /** 共有（既存） */
+    /** 共有 **/
     private fun sharePlainText(subject: String, body: String) {
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
@@ -72,7 +71,7 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * MAM の登録解除（MSAL には触れない）
+     * MAM の登録解除
      * @param upn  必須
      * @param aadId 任意（あればオーバーロードで渡す）
      */
@@ -100,7 +99,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // MSAL ログ設定（デバッグ用途）
+        // MSAL 詳細ログ（デバッグ用途：PII を有効化中。検証後は false に戻してください）
         Logger.getInstance().setEnableLogcatLog(true)
         Logger.getInstance().setLogLevel(Logger.LogLevel.VERBOSE)
         Logger.getInstance().setEnablePII(true)
@@ -112,7 +111,7 @@ class MainActivity : ComponentActivity() {
                 val coroutineScope = rememberCoroutineScope()
                 val snackbarHostState = remember { SnackbarHostState() }
 
-                // Editor UI 状態（既存）
+                // Editor UI 状態
                 var text by remember { mutableStateOf(TextFieldValue("")) }
                 var fileName by remember { mutableStateOf("memo.txt") }
                 var fileList by remember { mutableStateOf(listOf<String>()) }
@@ -122,14 +121,8 @@ class MainActivity : ComponentActivity() {
                 var signedInUser by remember { mutableStateOf<String?>(null) }
                 var isSignedIn by remember { mutableStateOf(false) }
 
-                // Graph のデフォルト（.default）
-                val graphDefaultScopes = listOf("https://graph.microsoft.com/.default")
-                // Interactive は MAM リソースの .default
-                val mamDefaultScopes = listOf("$MAM_RESOURCE_ID/.default")
-
                 // 起動時：ファイル一覧 + currentAccount 確認
                 LaunchedEffect(Unit) {
-                    // ファイル一覧
                     fileList = withContext(Dispatchers.IO) {
                         context.filesDir.listFiles()
                             ?.filter { it.isFile && it.name.endsWith(".txt", ignoreCase = true) }
@@ -158,7 +151,7 @@ class MainActivity : ComponentActivity() {
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // --- Sign in（interactive は MAM リソース） ---
+                            // --- Sign in（対話：MAM リソース） ---
                             Button(
                                 enabled = !isSignedIn,
                                 onClick = {
@@ -178,7 +171,7 @@ class MainActivity : ComponentActivity() {
                                             } else {
                                                 AuthClient.signInInteractive(
                                                     activity = activity,
-                                                    scopes = mamDefaultScopes.toTypedArray(),
+                                                    scopes = arrayOf(MAM_SIGNIN_SCOPE),
                                                     callback = object : AuthenticationCallback {
                                                         override fun onSuccess(result: IAuthenticationResult) {
                                                             signedInUser = result.account?.username
@@ -191,14 +184,9 @@ class MainActivity : ComponentActivity() {
                                                             }
                                                         }
                                                         override fun onError(exception: MsalException) {
-                                                            Log.e(
-                                                                "MSAL",
-                                                                "SignIn Error: ${exception.errorCode} - ${exception.message}"
-                                                            )
+                                                            Log.e("MSAL", "SignIn Error: ${exception.errorCode} - ${exception.message}", exception)
                                                             coroutineScope.launch {
-                                                                snackbarHostState.showSnackbar(
-                                                                    "Sign-in 失敗: ${exception.errorCode}"
-                                                                )
+                                                                snackbarHostState.showSnackbar("Sign-in 失敗: ${exception.errorCode}")
                                                             }
                                                         }
                                                         override fun onCancel() {
@@ -270,15 +258,9 @@ class MainActivity : ComponentActivity() {
                                                     "Sign-out & Unenroll 両方失敗: ${signOutError.message}, ${unenrollError.message}"
                                                 )
                                             }
-                                            signOutError != null -> {
-                                                snackbarHostState.showSnackbar("Sign-out 失敗: ${signOutError.message}")
-                                            }
-                                            unenrollError != null -> {
-                                                snackbarHostState.showSnackbar("Unenroll 失敗: ${unenrollError.message}")
-                                            }
-                                            else -> {
-                                                snackbarHostState.showSnackbar("Signed out & unenrolled")
-                                            }
+                                            signOutError != null -> snackbarHostState.showSnackbar("Sign-out 失敗: ${signOutError.message}")
+                                            unenrollError != null -> snackbarHostState.showSnackbar("Unenroll 失敗: ${unenrollError.message}")
+                                            else -> snackbarHostState.showSnackbar("Signed out & unenrolled")
                                         }
                                     }
                                 }
@@ -290,34 +272,37 @@ class MainActivity : ComponentActivity() {
                                 onClick = {
                                     coroutineScope.launch {
                                         try {
+                                            // 1) MSAL アカウントを取得
                                             val msal = AuthClient.getOrCreate(applicationContext)
-                                            // Graph silent（.default）。authority は account.authority を優先
-                                            val (account, graphToken) = withContext(Dispatchers.IO) {
-                                                val acc = msal.currentAccount?.currentAccount
+                                            val account = withContext(Dispatchers.IO) {
+                                                msal.currentAccount?.currentAccount
                                                     ?: throw IllegalStateException("MSAL current account is null")
-                                                val effectiveAuthority =
-                                                    acc.authority?.takeIf { it.isNotBlank() } ?: TENANT_AUTHORITY
-                                                val silent = AcquireTokenSilentParameters.Builder()
-                                                    .forAccount(acc)
-                                                    .fromAuthority(effectiveAuthority)
-                                                    .withScopes(graphDefaultScopes)
-                                                    .build()
-                                                val res = msal.acquireTokenSilent(silent)
-                                                val tok = res?.accessToken
-                                                    ?: throw IllegalStateException("Graph token is null")
-                                                acc to tok
                                             }
-                                            // デバッグ出力（本番はマスク推奨）
-                                            Log.i(
-                                                "Graph Token",
-                                                "authority=${account.authority ?: TENANT_AUTHORITY} " +
-                                                        "scope=${graphDefaultScopes.joinToString()} token=${graphToken}"
-                                            )
-                                            // Enroll（SDK 側の resourceId/.default 要求は MyMAMApp の Proxy が Silent で応答）
                                             val upn = signedInUser!!
                                             val aadId = account.id
-                                            val res = MAMInterop.register(upn, aadId)
-                                            snackbarHostState.showSnackbar("Enroll invoked: $res")
+
+                                            // 2) MAMEnrollmentManager を取得
+                                            val mgr = com.microsoft.intune.mam.client.app.MAMComponents.get(
+                                                com.microsoft.intune.mam.policy.MAMEnrollmentManager::class.java
+                                            ) ?: throw IllegalStateException("MAMEnrollmentManager is null")
+
+                                            // 3) registerAccountForMAM メソッドを取得
+                                            val method = com.microsoft.intune.mam.policy.MAMEnrollmentManager::class.java.getMethod(
+                                                "registerAccountForMAM",
+                                                String::class.java, // upn
+                                                String::class.java, // aadId
+                                                String::class.java, // tenantId
+                                                String::class.java  // authority
+                                            )
+
+                                            // 4) 取得した registerAccountForMAM メソッドで MAM Enroll を実行
+                                            val result = method.invoke(mgr, upn, aadId, TENANT_ID, TENANT_AUTHORITY)
+
+                                            // ログ出力
+                                            val msg = "registerAccountForMAM(upn=$upn, aadId=$aadId, tenantId=$TENANT_ID, authority=$TENANT_AUTHORITY) -> ${result?.toString() ?: "void"}"
+                                            Log.i("MAM-Enroll", msg)
+                                            snackbarHostState.showSnackbar("Enroll invoked: $msg")
+
                                         } catch (e: Exception) {
                                             Log.e("MAM-Flow", "MAM Enroll failed: ${e.message}", e)
                                             snackbarHostState.showSnackbar("MAM Enroll 失敗: ${e.message}")
@@ -337,6 +322,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
+
 
                         // ===== 以降は既存のエディタ UI =====
                         OutlinedTextField(
