@@ -77,18 +77,18 @@ class MainActivity : ComponentActivity() {
      * @param aadId 任意（あればオーバーロードで渡す）
      */
     private fun unenrollCurrentAccount(upn: String, aadId: String?) {
-        val mgr = com.microsoft.intune.mam.client.app.MAMComponents.get(
+        val enrollmentManager = com.microsoft.intune.mam.client.app.MAMComponents.get(
             com.microsoft.intune.mam.policy.MAMEnrollmentManager::class.java
         )
-        if (mgr == null) {
+        if (enrollmentManager == null) {
             Log.w("MAM-Unenroll", "MAMEnrollmentManager is null")
             return
         }
         try {
             if (aadId != null) {
-                mgr.unregisterAccountForMAM(upn, aadId)
+                enrollmentManager.unregisterAccountForMAM(upn, aadId)
             } else {
-                mgr.unregisterAccountForMAM(upn)
+                enrollmentManager.unregisterAccountForMAM(upn)
             }
             Log.i("MAM-Unenroll", "unregisterAccountForMAM called for $upn ($aadId)")
         } catch (e: Exception) {
@@ -283,7 +283,7 @@ class MainActivity : ComponentActivity() {
                                             val aadId = account.id
 
                                             // 2) MAMEnrollmentManager を取得
-                                            val mgr = com.microsoft.intune.mam.client.app.MAMComponents.get(
+                                            val enrollmentManager = com.microsoft.intune.mam.client.app.MAMComponents.get(
                                                 com.microsoft.intune.mam.policy.MAMEnrollmentManager::class.java
                                             ) ?: throw IllegalStateException("MAMEnrollmentManager is null")
 
@@ -297,7 +297,7 @@ class MainActivity : ComponentActivity() {
                                             )
 
                                             // 4) 取得した registerAccountForMAM メソッドで MAM Enroll を実行
-                                            val result = method.invoke(mgr, upn, aadId, TENANT_ID, TENANT_AUTHORITY)
+                                            val result = method.invoke(enrollmentManager, upn, aadId, TENANT_ID, TENANT_AUTHORITY)
 
                                             // ログ出力
                                             val msg = "registerAccountForMAM(upn=$upn, aadId=$aadId, tenantId=$TENANT_ID, authority=$TENANT_AUTHORITY) -> ${result?.toString() ?: "void"}"
