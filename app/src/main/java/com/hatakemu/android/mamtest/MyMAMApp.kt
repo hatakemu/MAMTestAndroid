@@ -7,8 +7,11 @@ import com.microsoft.intune.mam.policy.MAMEnrollmentManager
 import com.microsoft.intune.mam.policy.MAMServiceAuthenticationCallbackExtended
 import com.microsoft.identity.client.AcquireTokenSilentParameters
 import com.microsoft.identity.client.exception.MsalException
+import com.microsoft.intune.mam.client.notification.MAMNotificationReceiverRegistry
+import com.microsoft.intune.mam.policy.notification.MAMNotificationType
 import com.hatakemu.android.mamtest.config.AppConfig
 import com.hatakemu.android.mamtest.auth.AuthClient
+import com.hatakemu.android.mamtest.mam.MAMAppNotificationReceiver
 
 private const val TENANT_ID = AppConfig.TENANT_ID
 private const val TENANT_AUTHORITY = AppConfig.TENANT_AUTHORITY
@@ -96,6 +99,13 @@ class MyMAMApp : MAMApplication() {
             }
         })
         Log.d("MAM-SDK", "MAMServiceAuthenticationCallbackExtended registered (code)")
+
+        // NotificationReceiver を登録
+        val receiver = MAMAppNotificationReceiver()
+        val registry = MAMComponents.get(MAMNotificationReceiverRegistry::class.java)
+        registry?.registerReceiver(receiver, MAMNotificationType.WIPE_USER_DATA)
+        registry?.registerReceiver(receiver, MAMNotificationType.COMPLIANCE_STATUS)
+
     }
 
     // 任意：StrictMode
@@ -108,3 +118,4 @@ class MyMAMApp : MAMApplication() {
         }.onFailure { Log.d("MAM-SDK", "MAMStrictMode not available; skip") }
     }
 }
+
