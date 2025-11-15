@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.hatakemu.android.mamtest.auth.AuthClient
 import com.microsoft.identity.client.AuthenticationCallback
 import com.microsoft.identity.client.IAuthenticationResult
 import com.microsoft.identity.client.Logger
@@ -28,6 +27,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import com.hatakemu.android.mamtest.auth.AuthClient
+import com.hatakemu.android.mamtest.config.AppConfig
 
 private fun Context.findActivity(): Activity? {
     var ctx: Context = this
@@ -40,9 +41,9 @@ private fun Context.findActivity(): Activity? {
 
 
 // Sign-in 用の MAM リソース
-private const val MAM_SIGNIN_SCOPE = "https://msmamservice.api.application/.default"
-private const val TENANT_ID = "516f6912-3d81-47b6-8866-20353e6bfdda"
-private const val TENANT_AUTHORITY = "https://login.microsoftonline.com/$TENANT_ID"
+private const val MAM_SIGNIN_SCOPE = AppConfig.MAM_SIGNIN_SCOPE
+private const val TENANT_ID = AppConfig.TENANT_ID
+private const val TENANT_AUTHORITY = AppConfig.TENANT_AUTHORITY
 
 
 
@@ -225,7 +226,7 @@ class MainActivity : ComponentActivity() {
                                         val upn = triple?.first
                                         val aadId = triple?.second
 
-                                        // 1. MAM Unenroll（MSAL に触れない）
+                                        // 1. MAM Unenroll
                                         try {
                                             if (upn != null) {
                                                 unenrollCurrentAccount(upn, aadId)

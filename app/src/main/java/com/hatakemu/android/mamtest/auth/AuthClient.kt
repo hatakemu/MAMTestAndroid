@@ -2,7 +2,6 @@ package com.hatakemu.android.mamtest.auth
 
 import android.app.Activity
 import android.content.Context
-import com.hatakemu.android.mamtest.R
 import com.microsoft.identity.client.AuthenticationCallback
 import com.microsoft.identity.client.ISingleAccountPublicClientApplication
 import com.microsoft.identity.client.PublicClientApplication
@@ -11,6 +10,7 @@ import com.microsoft.identity.client.SignInParameters
 import com.microsoft.identity.client.exception.MsalException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.hatakemu.android.mamtest.R
 
 /**
  * MSAL (Android) 6.x シングルアカウント PCA ラッパー
