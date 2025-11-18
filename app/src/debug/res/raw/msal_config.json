@@ -1,0 +1,16 @@
+{
+  "client_id": "88b7095c-bc83-4838-ae06-f2fcbbc88b9e",
+  "authorization_user_agent": "DEFAULT",
+  "redirect_uri": "msauth://com.hatakemu.android.mamtest/Nli7ogtDVf4QgBfSiuIrWDWEymU%3D",
+  "broker_redirect_uri_registered": true,
+  "account_mode": "SINGLE",
+  "authorities": [
+    {
+      "type": "AAD",
+      "audience": {
+        "type": "AzureADMyOrg",
+        "tenant_id": "516f6912-3d81-47b6-8866-20353e6bfdda"
+      }
+    }
+  ]
+}
