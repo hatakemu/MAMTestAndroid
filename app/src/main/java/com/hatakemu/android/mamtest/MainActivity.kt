@@ -19,16 +19,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.microsoft.identity.client.AuthenticationCallback
-import com.microsoft.identity.client.IAuthenticationResult
-import com.microsoft.identity.client.Logger
-import com.microsoft.identity.client.exception.MsalException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import com.microsoft.identity.client.AuthenticationCallback
+import com.microsoft.identity.client.IAuthenticationResult
+import com.microsoft.identity.client.Logger
+import com.microsoft.identity.client.exception.MsalException
 import com.hatakemu.android.mamtest.auth.AuthClient
 import com.hatakemu.android.mamtest.config.AppConfig
+import com.microsoft.intune.mam.client.app.MAMComponents
+import com.microsoft.intune.mam.policy.MAMComplianceManager
+
 
 private fun Context.findActivity(): Activity? {
     var ctx: Context = this
@@ -70,6 +73,44 @@ class MainActivity : ComponentActivity() {
             Triple(acc.username ?: return@withContext null, acc.id, acc.authority)
         }
     }
+
+
+    /**
+     * MAM の登録
+     * @param upn  必須
+     * @param aadId 任意（あればオーバーロードで渡す）
+     */
+    private fun enrollCurrentAccount(upn: String, aadId: String?) {
+        val enrollmentManager = com.microsoft.intune.mam.client.app.MAMComponents.get(
+            com.microsoft.intune.mam.policy.MAMEnrollmentManager::class.java
+        )
+        if (enrollmentManager == null) {
+            Log.w("MAM-Enroll", "MAMEnrollmentManager is null")
+            return
+        }
+        try {
+            // registerAccountForMAM メソッドを取得
+            val method = com.microsoft.intune.mam.policy.MAMEnrollmentManager::class.java.getMethod(
+                "registerAccountForMAM",
+                String::class.java, // upn
+                String::class.java, // aadId
+                String::class.java, // tenantId
+                String::class.java  // authority
+            )
+
+            // 取得した registerAccountForMAM メソッドで MAM Enroll を実行
+            val result = method.invoke(enrollmentManager, upn, aadId, TENANT_ID, TENANT_AUTHORITY)
+
+            // ログ出力
+            val msg = "registerAccountForMAM(upn=$upn, aadId=$aadId, tenantId=$TENANT_ID, authority=$TENANT_AUTHORITY) -> ${result?.toString() ?: "void"}"
+            Log.i("MAM-Enroll", msg)
+
+        } catch (e: Exception) {
+            Log.e("MAM-Enroll", "Failed to register MAM: ${e.message}", e)
+            throw e
+        }
+    }
+
 
     /**
      * MAM の登録解除
@@ -166,32 +207,121 @@ class MainActivity : ComponentActivity() {
                                         try {
                                             val triple = resolveMsalAccount(applicationContext)
                                             if (triple != null) {
+                                                val upn = triple.first ?: ""
+                                                val aadId = triple.second ?: ""
+
                                                 isSignedIn = true
-                                                signedInUser = triple.first
-                                                snackbarHostState.showSnackbar("すでにサインイン済みです")
+                                                signedInUser = upn
+
+                                                Log.d("MSAL", "Current account found: UPN: $upn, AADID: $aadId")
+                                                snackbarHostState.showSnackbar("すでにサインイン済みです ($upn)")
+
+                                                // --- MAM Enrollment
+                                                try {
+                                                    // MAM Enrollment 実行
+                                                    Log.d("MAM-Enroll", "Enroll called for $upn")
+                                                    enrollCurrentAccount(upn, aadId)
+
+                                                } catch (e: Exception) {
+                                                    Log.e(
+                                                        "MAM-Enroll",
+                                                        "MAM Enrollment failed: ${e.message}",
+                                                        e
+                                                    )
+                                                }
+
+                                                // remediateCompliance を利用して MAM 適用
+                                                if (upn.isNotBlank() && aadId.isNotBlank()) {
+                                                    val complianceManager =
+                                                        MAMComponents.get(MAMComplianceManager::class.java)
+                                                    complianceManager?.remediateCompliance(
+                                                        upn,
+                                                        aadId,
+                                                        TENANT_ID,
+                                                        TENANT_AUTHORITY,
+                                                        true
+                                                    )
+                                                    Log.i("MAM-Compliance", "remediateCompliance called for $upn")
+                                                } else {
+                                                    Log.e("MAM-Compliance", "Cannot remediate: UPN or AAD ID is empty")
+                                                }
+
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar("MAM enrolled: $upn")
+                                                }
+
                                             } else {
                                                 AuthClient.signInInteractive(
                                                     activity = activity,
                                                     scopes = arrayOf(MAM_SIGNIN_SCOPE),
                                                     callback = object : AuthenticationCallback {
                                                         override fun onSuccess(result: IAuthenticationResult) {
-                                                            signedInUser = result.account?.username
+                                                            val upn = result.account?.username ?: ""
+                                                            val aadId = result.account?.id ?: ""
                                                             isSignedIn = true
-                                                            Log.d("MSAL", "SignIn Success: $signedInUser")
+                                                            signedInUser = upn
+
+                                                            Log.d("MSAL", "SignIn Success: $upn, $aadId")
+
                                                             coroutineScope.launch {
                                                                 snackbarHostState.showSnackbar(
-                                                                    "Signed in: ${signedInUser ?: "unknown"}"
+                                                                    "Signed in: ${upn ?: "unknown"}"
                                                                 )
                                                             }
+
+                                                            // --- MAM Enrollment
+                                                            try {
+                                                                Log.i("MAM-Enroll","UPN: $upn, AADID: $aadId")
+
+                                                                // MAM Enrollment 実行
+                                                                Log.d("MAM-Enroll", "Enroll called for $upn")
+                                                                enrollCurrentAccount(upn, aadId)
+
+                                                            } catch (e: Exception) {
+                                                                Log.e(
+                                                                    "MAM-Enroll",
+                                                                    "MAM Enrollment failed: ${e.message}",
+                                                                    e
+                                                                )
+                                                            }
+
+                                                            coroutineScope.launch {
+                                                                snackbarHostState.showSnackbar("Signed in & MAM enrolled: $upn")
+                                                            }
+
+                                                            // remediateCompliance を利用して MAM 適用
+                                                            if (upn.isNotBlank() && aadId.isNotBlank()) {
+                                                                val complianceManager =
+                                                                    MAMComponents.get(MAMComplianceManager::class.java)
+                                                                complianceManager?.remediateCompliance(
+                                                                    upn,
+                                                                    aadId,
+                                                                    TENANT_ID,
+                                                                    TENANT_AUTHORITY,
+                                                                    true
+                                                                )
+                                                                Log.i("MAM-Compliance", "remediateCompliance called for $upn")
+                                                            } else {
+                                                                Log.e("MAM-Compliance", "Cannot remediate: UPN or AAD ID is empty")
+                                                            }
                                                         }
+
                                                         override fun onError(exception: MsalException) {
-                                                            Log.e("MSAL", "SignIn Error: ${exception.errorCode} - ${exception.message}", exception)
+                                                            Log.e(
+                                                                "MSAL",
+                                                                "SignIn Error: ${exception.errorCode} - ${exception.message}",
+                                                                exception
+                                                            )
                                                             coroutineScope.launch {
                                                                 snackbarHostState.showSnackbar("Sign-in 失敗: ${exception.errorCode}")
                                                             }
                                                         }
+
                                                         override fun onCancel() {
-                                                            Log.w("MSAL", "SignIn Cancelled by user")
+                                                            Log.w(
+                                                                "MSAL",
+                                                                "SignIn Cancelled by user"
+                                                            )
                                                             coroutineScope.launch {
                                                                 snackbarHostState.showSnackbar("キャンセルされました")
                                                             }
@@ -232,7 +362,10 @@ class MainActivity : ComponentActivity() {
                                                 unenrollCurrentAccount(upn, aadId)
                                                 Log.d("MAM-Unenroll", "Unenroll called")
                                             } else {
-                                                Log.w("MAM-Unenroll", "UPN が取得できず、Unenroll をスキップ")
+                                                Log.w(
+                                                    "MAM-Unenroll",
+                                                    "UPN が取得できず、Unenroll をスキップ"
+                                                )
                                             }
                                         } catch (e: Exception) {
                                             unenrollError = e
@@ -259,66 +392,24 @@ class MainActivity : ComponentActivity() {
                                                     "Sign-out & Unenroll 両方失敗: ${signOutError.message}, ${unenrollError.message}"
                                                 )
                                             }
+
                                             signOutError != null -> snackbarHostState.showSnackbar("Sign-out 失敗: ${signOutError.message}")
-                                            unenrollError != null -> snackbarHostState.showSnackbar("Unenroll 失敗: ${unenrollError.message}")
+                                            unenrollError != null -> snackbarHostState.showSnackbar(
+                                                "Unenroll 失敗: ${unenrollError.message}"
+                                            )
+
                                             else -> snackbarHostState.showSnackbar("Signed out & unenrolled")
                                         }
                                     }
                                 }
                             ) { Text("Sign out") }
-
-                            // --- MAM Enroll ---
-                            Button(
-                                enabled = isSignedIn,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        try {
-                                            // 1) MSAL アカウントを取得
-                                            val msal = AuthClient.getOrCreate(applicationContext)
-                                            val account = withContext(Dispatchers.IO) {
-                                                msal.currentAccount?.currentAccount
-                                                    ?: throw IllegalStateException("MSAL current account is null")
-                                            }
-                                            val upn = signedInUser!!
-                                            val aadId = account.id
-
-                                            // 2) MAMEnrollmentManager を取得
-                                            val enrollmentManager = com.microsoft.intune.mam.client.app.MAMComponents.get(
-                                                com.microsoft.intune.mam.policy.MAMEnrollmentManager::class.java
-                                            ) ?: throw IllegalStateException("MAMEnrollmentManager is null")
-
-                                            // 3) registerAccountForMAM メソッドを取得
-                                            val method = com.microsoft.intune.mam.policy.MAMEnrollmentManager::class.java.getMethod(
-                                                "registerAccountForMAM",
-                                                String::class.java, // upn
-                                                String::class.java, // aadId
-                                                String::class.java, // tenantId
-                                                String::class.java  // authority
-                                            )
-
-                                            // 4) 取得した registerAccountForMAM メソッドで MAM Enroll を実行
-                                            val result = method.invoke(enrollmentManager, upn, aadId, TENANT_ID, TENANT_AUTHORITY)
-
-                                            // ログ出力
-                                            val msg = "registerAccountForMAM(upn=$upn, aadId=$aadId, tenantId=$TENANT_ID, authority=$TENANT_AUTHORITY) -> ${result?.toString() ?: "void"}"
-                                            Log.i("MAM-Enroll", msg)
-                                            snackbarHostState.showSnackbar("Enroll invoked: $msg")
-
-                                        } catch (e: Exception) {
-                                            Log.e("MAM-Flow", "MAM Enroll failed: ${e.message}", e)
-                                            snackbarHostState.showSnackbar("MAM Enroll 失敗: ${e.message}")
-                                        }
-                                    }
-                                }
-                            ) { Text("MAM Enroll") }
                         }
-
                         // 認証済み表示
                         if (isSignedIn) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "Account: ${signedInUser ?: "(unknown)"}",
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyLarge
                             )
                         }
 

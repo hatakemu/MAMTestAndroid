@@ -101,18 +101,27 @@ object AuthClient {
         app.signIn(params)
     }
 
+
     /**
-     * サインアウト。コールバックは MSAL 側から呼ばれます。
+     * サインアウト処理
+     * @param activity UIスレッドのActivity
+     * @param onComplete 成功時の処理
+     * @param onError エラー時の処理
      */
-    suspend fun signOut(activity: Activity) {
+    suspend fun signOut(
+        activity: Activity,
+        onComplete: (() -> Unit)? = null,
+        onError: ((MsalException) -> Unit)? = null
+    ) {
         val app = getOrCreate(activity.applicationContext)
         app.signOut(object : ISingleAccountPublicClientApplication.SignOutCallback {
             override fun onSignOut() {
-                // 必要ならクリーンアップ処理
+                client = null // MSALインスタンスをクリア
+                onComplete?.invoke()
             }
 
             override fun onError(exception: MsalException) {
-                // ログ等
+                onError?.invoke(exception)
             }
         })
     }
