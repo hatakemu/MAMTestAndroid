@@ -2,7 +2,11 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.microsoft.intune.mam") //MAM プラグイン
+    id("com.microsoft.intune.mam")
+}
+
+configurations.configureEach {
+    exclude(group = "androidx.profileinstaller")
 }
 
 android {
@@ -15,22 +19,43 @@ android {
         applicationId = "com.hatakemu.android.mamtest"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = 4
+        versionName = "4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:\\Users\\hatakemu\\.android\\releasekey\\release.jks")
+            storePassword = System.getenv("AND_REL_KEYSTORE_PASS") ?: "Password"
+            keyAlias = "key0"
+            keyPassword = System.getenv("AND_REL_KEY_PASS") ?: "Password"
+        }
+    }
+
     buildTypes {
-        release {
+        getByName("debug") {
+            manifestPlaceholders.put("redirectPath", "/Nli7ogtDVf4QgBfSiuIrWDWEymU=")
+        }
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            manifestPlaceholders.put("redirectPath", "/8w2Zbr8qkGWysNZAl1DlAgmu1AA=")
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            isShrinkResources = false
         }
     }
     
+    packaging {
+        resources {
+            excludes += listOf(
+                "**/*.dex.prof",
+                "**/*.prof",
+                "**/baseline*.prof*"
+            )
+        }
+    }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.7.0"
     }
@@ -55,7 +80,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation("androidx.activity:activity-compose:1.10.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

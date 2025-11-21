@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.hatakemu.android.mamtest">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- ネットワークアクセス権限 -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -43,7 +42,7 @@
                 <data
                     android:scheme="msauth"
                     android:host="com.hatakemu.android.mamtest"
-                    android:path="/Nli7ogtDVf4QgBfSiuIrWDWEymU=" />
+                    android:path="${redirectPath}" />
             </intent-filter>
         </activity>
     </application>
