@@ -147,7 +147,7 @@ Android Studio で **"File"** - **"Open"** から展開したプロジェクト�
 <details>
 <summary><h2>4. リリースビルド用のキーストアを作成</h2></summary>
 
-Android Enterprise に Managed Google Play から限定公開アプリとして配布するためには、リリースビルド用の署名がついた .apk が必要です。そのため、リリースビルド用のキーストアを作成します。
+Android Enterprise に Managed Google Play から限定公開アプリとして配布するためには、リリースビルド用の署名がついた .apk ファイルが必要です。そのため、リリースビルド用のキーストアを作成します。
 
 ### 4.1 Android Studio でのキーストア作成
 
@@ -163,13 +163,13 @@ Android Enterprise に Managed Google Play から限定公開アプリとして�
 
 ![Generate key for release build](docs/images/releasekey03.png)
 
-4. キーストア情報を入力：
-   - **"Key store path"**: キーストアファイルの保存場所を指定
-   - **"Password"**: キーストアのパスワードを設定
-   - **"Key Alias"**: キーのエイリアス名
-   - **"Key Password"**: キーのパスワードを設定
-   - **"Validity (years)"**: 有効期限
-   - **"Certificate"**: 発行者情報を入力
+4. キーストア情報を入力します。
+   - **Key store path**: キーストアファイルの保存場所を指定
+   - **Password**: キーストアのパスワードを設定
+   - **Key Alias**: キーのエイリアス名
+   - **Key Password**: キーのパスワードを設定
+   - **Validity (years)**: 有効期限
+   - **Certificate**: 発行者情報を入力
      - "First and Last Name": 氏名
      - "Organizational Unit": 部署名
      - "Organization": 組織名
@@ -233,7 +233,8 @@ PS C:\WINDOWS\system32> $base64Std
 
 <details>
 <summary><h2>6. パッケージ名の変更（任意）</h2></summary>
-本アプリのパッケージ名は `com.hatakemu.android.mamtest` です。自分独自のパッケージ名（例：`jp.co.android.mamapp`）を使用したい場合、以下の手順で変更します。
+
+本アプリのパッケージ名は `com.hatakemu.android.mamtest` です。自分独自のパッケージ名（例：`jp.co.android.mamapp` を使用したい場合、以下の手順で変更します。
 
 ### 6.1 build.gradle.ktsの変更
 
@@ -357,12 +358,14 @@ cd <プロジェクトフォルダーのパス>
 1. 作成したアプリの **"API のアクセス許可"** から **"アクセス許可の追加"** を選択し、以下の API のアクセス許可を追加します。
 
 - **Microsoft Mobile Application Management** の **DeviceManagementManagedApps.ReadWrite** (MAM 用)<br>
+<br>
 **"所属する組織で使用している API"** を選択し、**"Microsoft Mobile Application Management"** で検索をして、表示された **"DeviceManagementManagedApps.ReadWrite"** にチェックを入れてアクセス許可を追加します。
 ![Register a new app](docs/images/entraapp06.png)
 ![Register a new app](docs/images/entraapp07.png)
 
 
 - **Microsoft Graph** の **Files.ReadWrite** (OneDrive 読み書き用)<br>
+<br>
 **"Microsoft API"** の **"Microsoft Graph"** を選択し、**"委任されたアクセス許可"** を選択して、**"Files.ReadWrite"** を検索してチェックを入れてアクセス許可を追加します。
 ![Register a new app](docs/images/entraapp08.png)
 
@@ -384,7 +387,7 @@ cd <プロジェクトフォルダーのパス>
 
 **ファイル**: `app/src/main/java/com/hatakemu/android/mamtest/config/AppConfig.kt`
 
-TENANT_ID にそれぞれの環境のテナント ID を設定します。
+**YOUR_TENANT_ID_HERE** にそれぞれの環境のテナント ID を設定します。
 
 ```kotlin
 object AppConfig {
@@ -399,13 +402,13 @@ object AppConfig {
 
 ### 8.2 MSAL設定ファイルの更新
 
-以下をそれぞれの環境に合わせて設定します。
-   - **"client_id"**: Entra アプリの App ID
-   - **"redirect_uri"**: Entra アプリのリダイレクト URI
-   - **"tenant_id"**: Entra のテナント ID
-  
-
 **ファイル**: `app/src/debug/res/raw/msal_config.json`
+
+以下をそれぞれの環境に合わせて設定します。
+   - **YOUR_CLIENT_ID_HERE**: Entra アプリの App ID
+   - **YYOUR_PACKAGE_NAME**: パッケージ名
+   - **YOUR_DEBUG_SIGNATURE_HASH**: デバッグ用のキーのハッシュ値
+   - **YOUR_TENANT_ID_HERE**: Entra のテナント ID
 
 ```json
 {
@@ -428,6 +431,12 @@ object AppConfig {
 
 **ファイル**: `app/src/release/res/raw/msal_config.json`
 
+以下をそれぞれの環境に合わせて設定します。
+   - **YOUR_CLIENT_ID_HERE**: Entra アプリの App ID
+   - **YYOUR_PACKAGE_NAME**: パッケージ名
+   - **YOUR_RELEASE_SIGNATURE_HASH**: リリース用のキーのハッシュ値
+   - **YOUR_TENANT_ID_HERE**: Entra のテナント ID
+
 ```json
 {
   "client_id": "YOUR_CLIENT_ID_HERE",
@@ -447,13 +456,19 @@ object AppConfig {
 }
 ```
 
+**注意**
+**msal_config.json** に記述するハッシュ値は、URLエンコードする必要があります。最後の **=** は **%3D** に置き換えてください。(Entra のアプリの **MSAL 構成** に表示されている redirect_uri をそのまま記述してください。) 
+
+
 ### 8.3 build.gradle.kts の署名設定更新
 
-以下をそれぞれの環境に合わせて設定します:
-   - **"storeFile"**: リリースビルド用のキーストアのパスを記述します。
-   - **"storePassword"**: リリースビルド用のキーストアのパスワードを環境変数 **"AND_REL_KEYSTORE_PASS"** にセットするか、**"YOUR_KEYSTORE_PASSWORD"** に記述します。
-   - **"keyAlias"**: リリースビルド用のキーのエイリアスを記述します。
-   - **"keyPassword"**: リリースビルド用のキーのパスワードを環境変数 **"AND_REL_KEY_PASS"** にセットするか、**"YOUR_KEY_PASSWORD"** に記述します。
+**ファイル**: `app/build.gradle.kts`
+
+以下をそれぞれの環境に合わせて設定します。
+   - **storeFile**: リリースビルド用のキーストアのパスを記述します。
+   - **storePassword**: リリースビルド用のキーストアのパスワードを環境変数 **AND_REL_KEYSTORE_PASS** にセットするか、**YOUR_KEYSTORE_PASSWORD** に記述します。
+   - **keyAlias**: リリースビルド用のキーのエイリアスを記述します。
+   - **keyPassword**: リリースビルド用のキーのパスワードを環境変数 **AND_REL_KEY_PASS** にセットするか、**YOUR_KEY_PASSWORD** に記述します。
   
 ```kotlin
 signingConfigs {
@@ -481,6 +496,9 @@ buildTypes {
     }
 }
 ```
+
+**注意**
+**build.gradle.kts** に記述するハッシュ値は、URLエンコードする必要はありません。最後の **=** はそのまま記述します。
 
 </details>
 
