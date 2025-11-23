@@ -355,23 +355,23 @@ cd <プロジェクトフォルダーのパス>
 
 ### 7.3 API アクセス許可の設定
 
-1. 作成したアプリの **"API のアクセス許可"** から **"アクセス許可の追加"** を選択し、以下の API のアクセス許可を追加します。
+1. 作成したアプリの **API のアクセス許可** から **アクセス許可の追加** を選択し、以下の API のアクセス許可を追加します。
 
 - **Microsoft Mobile Application Management** の **DeviceManagementManagedApps.ReadWrite** (MAM 用)<br><br>
 
-**"所属する組織で使用している API"** を選択し、**"Microsoft Mobile Application Management"** で検索をして、表示された **"DeviceManagementManagedApps.ReadWrite"** にチェックを入れてアクセス許可を追加します。
+**"所属する組織で使用している API"** を選択し、**Microsoft Mobile Application Management** で検索をして、表示された **DeviceManagementManagedApps.ReadWrite** にチェックを入れてアクセス許可を追加します。
 ![Register a new app](docs/images/entraapp06.png)
 ![Register a new app](docs/images/entraapp07.png)
 
 
 - **Microsoft Graph** の **Files.ReadWrite** (OneDrive 読み書き用)<br><br>
 
-**"Microsoft API"** の **"Microsoft Graph"** を選択し、**"委任されたアクセス許可"** を選択して、**"Files.ReadWrite"** を検索してチェックを入れてアクセス許可を追加します。
+**Microsoft API** の **Microsoft Graph** を選択し、**委任されたアクセス許可** を選択して、**Files.ReadWrite** を検索してチェックを入れてアクセス許可を追加します。
 ![Register a new app](docs/images/entraapp08.png)
 
 
 2. 追加した API アクセス許可について、テナントレベルで管理者の同意を付与します。
-**"構成されたアクセス許可"** から、追加した API のアクセス許可が表示されていることを確認し、**"Your Tenant に管理者の同意を与えます"** をクリックします。
+**構成されたアクセス許可** から、追加した API のアクセス許可が表示されていることを確認し、**Your Tenant に管理者の同意を与えます** をクリックします。
 ![Register a new app](docs/images/entraapp09.png)
 
 
