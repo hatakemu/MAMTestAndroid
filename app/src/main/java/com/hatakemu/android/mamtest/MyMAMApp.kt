@@ -11,7 +11,7 @@ import com.microsoft.intune.mam.client.notification.MAMNotificationReceiverRegis
 import com.microsoft.intune.mam.policy.notification.MAMNotificationType
 import com.hatakemu.android.mamtest.config.AppConfig
 import com.hatakemu.android.mamtest.auth.AuthClient
-import com.hatakemu.android.mamtest.mam.MAMAppNotificationReceiver
+import com.hatakemu.android.mamtest.MAMAppNotificationReceiver
 
 private const val TENANT_ID = AppConfig.TENANT_ID
 private const val TENANT_AUTHORITY = AppConfig.TENANT_AUTHORITY
@@ -35,8 +35,8 @@ class MyMAMApp : MAMApplication() {
             override fun acquireToken(
                 upn: String,
                 aadId: String,
-                tenantId: String?,         // null 可
-                authority: String?,         // null 可
+                tenantId: String?,
+                authority: String?,
                 resourceId: String
             ): String? {
                 if (resourceId.isBlank()) {

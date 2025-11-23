@@ -1,4 +1,4 @@
-package com.hatakemu.android.mamtest.mam
+package com.hatakemu.android.mamtest
 
 import android.util.Log
 import com.microsoft.intune.mam.client.notification.MAMNotificationReceiver
@@ -23,31 +23,6 @@ class MAMAppNotificationReceiver(
                 MAMNotificationType.MAM_ENROLLMENT_RESULT -> {
                     val enrollNotif = notification as MAMEnrollmentNotification
                     Log.i("MAM-Notify", "Enrollment result: ${enrollNotif.enrollmentResult}")
-
-                    /* remediateCompliance はここでは実行しない
-                    if (enrollNotif.enrollmentResult.name == "ENROLLMENT_SUCCEEDED") {
-
-                        // MSALから現在のアカウント情報を取得
-                        val account = AuthClient.current()?.currentAccount?.currentAccount
-                        val upn = account?.username ?: ""
-                        val aadId = account?.id ?: ""
-
-                        if (upn.isNotBlank() && aadId.isNotBlank()) {
-                            val complianceManager =
-                                MAMComponents.get(MAMComplianceManager::class.java)
-                            complianceManager?.remediateCompliance(
-                                upn,
-                                aadId,
-                                tenantId,
-                                authority,
-                                true
-                            )
-                            Log.i("MAM-Compliance", "remediateCompliance called for $upn")
-                        } else {
-                            Log.e("MAM-Compliance", "Cannot remediate: UPN or AAD ID is empty")
-                        }
-                    }
-                     */
                 }
 
                 MAMNotificationType.COMPLIANCE_STATUS -> {

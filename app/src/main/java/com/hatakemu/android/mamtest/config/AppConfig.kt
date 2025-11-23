@@ -3,7 +3,7 @@ package com.hatakemu.android.mamtest.config
 /**
  * アプリ全体で共有する定数。
  * - MAM / テナント関連はここから参照します。
- * - MSAL の clientId / redirectUri 等は res/raw/msal_config.json で管理します。
+ * - MSAL の clientId / redirectUri 等は msal_config.json で管理します。
  */
 object AppConfig {
     // === Tenant / Authority ===

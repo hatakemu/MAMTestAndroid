@@ -11,9 +11,7 @@ configurations.configureEach {
 
 android {
     namespace = "com.hatakemu.android.mamtest"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.hatakemu.android.mamtest"
