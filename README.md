@@ -51,17 +51,17 @@ javac 17.0.17
 
 1. インストール後、Android Studio を起動します。
 
-2. **Install Type** 画面で **"Standard"** を選択します。
+2. **"Install Type"** 画面で **"Standard"** を選択します。
 
 ![Android Studio Install Type](docs/images/asinstall01.png)
 
-3. **License Agreement** で **"Accept"** を選択してコンポーネントをインストールします。
+3. **"License Agreement"** で **"Accept"** を選択してコンポーネントをインストールします。
 
 ### 2.3 Android SDK の設定
 
 1. Android Studio を起動後、**"More Actions"** から **"SDK Manager"** を選択します。
 
-2. **SDK Platforms** タブで以下をインストールします：
+2. **"SDK Platforms"** タブで以下をインストールします：
    - **Android 14.0 ("UpsideDownCake")** - API Level 34（2025年10月時点で Intune SDK 安定稼働バージョン）
 
 ![Android SDK Manager](docs/images/asinstall02.png)
@@ -101,18 +101,18 @@ Running on Windows 10.0.22621
 
 ### 2.6 Android エミュレータの作成
 
-1. Android Studio 右側の **Device Manager** アイコンをクリックします。
+1. Android Studio 右側の **"Device Manager"** アイコンをクリックします。
 2. **"Create Virtual Device"** を選択します。
 
 ![Android Device Manager](docs/images/asinstall04.png)
 
-3. **Phone** カテゴリから **"Pixel 8"** を選択します。（API バージョン 34 - Android 14 対応）
+3. **"Phone"** カテゴリから **"Pixel 8"** を選択します（API バージョン 34 - Android 14 対応）
 
 ![Android Virtual Device Selection](docs/images/asinstall05.png)
 
-4. **API 34 "UpsideDownCake", Android 14.0** を選択します。
+4. **"API 34 'UpsideDownCake', Android 14.0"** を選択します。
 
-5. **★マーク** のついたダウンロードコンポーネントをクリックしてシステムイメージをダウンロードします。
+5. **"★マーク"** のついたダウンロードコンポーネントをクリックしてシステムイメージをダウンロードします。
 
 ![Android Virtual Device Configuration](docs/images/asinstall06.png)
 
@@ -137,8 +137,8 @@ Android Studio で **"File"** - **"Open"** から展開したプロジェクト�
 **ビルドエラーが表示される場合**  
 この時点でビルドエラーが表示される場合、以下をお試しください。
 - PC を再起動後、`app/build` および `app/release` フォルダを削除します
-- Android Studio を起動して、**Build** - **Clean Project** を実行します
-- Android Studio から、**File** - **Invalidate Caches** を開き、**Invalidate and Restart** を実行します
+- Android Studio を起動して、**"Build"** - **"Clean Project"** を実行します
+- Android Studio から、**"File"** - **"Invalidate Caches"** を開き、**"Invalidate and Restart"** を実行します
 
 上記を実施してもビルドエラー（デバッグモード）が取れない場合には、VS Code でプロジェクトを開き、エラー内容について Github Copilot に対応を聞くと、だいたい対処してくれます。現時点では、リリースモードのキーストアが作成されていないため、リリースモードでのビルドは失敗します。
 
@@ -164,18 +164,18 @@ Android Enterprise に Managed Google Play から限定公開アプリとして�
 ![Generate key for release build](docs/images/releasekey03.png)
 
 4. キーストア情報を入力：
-   - **Key store path**: キーストアファイルの保存場所を指定
-   - **Password**: キーストアのパスワードを設定
-   - **Key Alias**: キーのエイリアス名
-   - **Key Password**: キーのパスワードを設定
-   - **Validity (years)**: 有効期限
-   - **Certificate**: 発行者情報を入力
-     - First and Last Name: 氏名
-     - Organizational Unit: 部署名
-     - Organization: 組織名
-     - City or Locality: 市区町村
-     - State or Province: 都道府県
-     - Country Code (XX): 国コード（JP）
+   - **"Key store path"**: キーストアファイルの保存場所を指定
+   - **"Password"**: キーストアのパスワードを設定
+   - **"Key Alias"**: キーのエイリアス名
+   - **"Key Password"**: キーのパスワードを設定
+   - **"Validity (years)"**: 有効期限
+   - **"Certificate"**: 発行者情報を入力
+     - "First and Last Name": 氏名
+     - "Organizational Unit": 部署名
+     - "Organization": 組織名
+     - "City or Locality": 市区町村
+     - "State or Province": 都道府県
+     - "Country Code (XX)": 国コード（JP）
 
 ![Generate key for release build](docs/images/releasekey04.png)
 
@@ -320,9 +320,10 @@ cd <プロジェクトフォルダーのパス>
 
 新しいパッケージ構造でビルドが通ることを確認後、`app/src/main/java/com/hatakemu/android/mamtest/` フォルダを削除します。
 
+</details>
 
-
-## 7. Entra アプリの登録
+<details>
+<summary><h2>7. Entra アプリの登録</h2></summary>
 
 ### 7.1 アプリの登録
 
@@ -353,21 +354,21 @@ cd <プロジェクトフォルダーのパス>
 
 ### 7.3 API アクセス許可の設定
 
-1. 作成したアプリの **API のアクセス許可** から **アクセス許可の追加** を選択し、以下の API のアクセス許可を追加します。
+1. 作成したアプリの **"API のアクセス許可"** から **"アクセス許可の追加"** を選択し、以下の API のアクセス許可を追加します。
 
 - **Microsoft Mobile Application Management** の **DeviceManagementManagedApps.ReadWrite** (MAM 用)<br>
-**所属する組織で使用している API** を選択し、**Microsoft Mobile Application Management** で検索をして、表示された **DeviceManagementManagedApps.ReadWrite** にチェックを入れてアクセス許可を追加します。
+**"所属する組織で使用している API"** を選択し、**"Microsoft Mobile Application Management"** で検索をして、表示された **"DeviceManagementManagedApps.ReadWrite"** にチェックを入れてアクセス許可を追加します。
 ![Register a new app](docs/images/entraapp06.png)
 ![Register a new app](docs/images/entraapp07.png)
 
 
 - **Microsoft Graph** の **Files.ReadWrite** (OneDrive 読み書き用)<br>
-**Microsoft API** の **Microsoft Graph** を選択し、**委任されたアクセス許可** を選択して、**Files.ReadWrite** を検索してチェックを入れてアクセス許可を追加します。
+**"Microsoft API"** の **"Microsoft Graph"** を選択し、**"委任されたアクセス許可"** を選択して、**"Files.ReadWrite"** を検索してチェックを入れてアクセス許可を追加します。
 ![Register a new app](docs/images/entraapp08.png)
 
 
 2. 追加した API アクセス許可について、テナントレベルで管理者の同意を付与します。
-**構成されたアクセス許可** から、追加した API のアクセス許可が表示されていることを確認し、**Your Tenant に管理者の同意を与えます** をクリックします。
+**"構成されたアクセス許可"** から、追加した API のアクセス許可が表示されていることを確認し、**"Your Tenant に管理者の同意を与えます"** をクリックします。
 ![Register a new app](docs/images/entraapp09.png)
 
 
@@ -399,9 +400,9 @@ object AppConfig {
 ### 8.2 MSAL設定ファイルの更新
 
 以下をそれぞれの環境に合わせて設定します。
-   - **client_id**: Entra アプリの App ID
-   - **redirect_uri**: Entra アプリのリダイレクト URI
-   - **tenant_id**: Entra のテナント ID
+   - **"client_id"**: Entra アプリの App ID
+   - **"redirect_uri"**: Entra アプリのリダイレクト URI
+   - **"tenant_id"**: Entra のテナント ID
   
 
 **ファイル**: `app/src/debug/res/raw/msal_config.json`
@@ -449,10 +450,10 @@ object AppConfig {
 ### 8.3 build.gradle.kts の署名設定更新
 
 以下をそれぞれの環境に合わせて設定します:
-   - **storeFile**: リリースビルド用のキーストアのパスを記述します。
-   - **storePassword**: リリースビルド用のキーストアのパスワードを環境変数 **AND_REL_KEYSTORE_PASS** にセットするか、**YOUR_KEYSTORE_PASSWORD** に記述します。
-   - **keyAlias**: リリースビルド用のキーのエイリアスを記述します。
-   - **keyPassword**: リリースビルド用のキーのパスワードを環境変数 **AND_REL_KEY_PASS** にセットするか、**YOUR_KEY_PASSWORD** に記述します。
+   - **"storeFile"**: リリースビルド用のキーストアのパスを記述します。
+   - **"storePassword"**: リリースビルド用のキーストアのパスワードを環境変数 **"AND_REL_KEYSTORE_PASS"** にセットするか、**"YOUR_KEYSTORE_PASSWORD"** に記述します。
+   - **"keyAlias"**: リリースビルド用のキーのエイリアスを記述します。
+   - **"keyPassword"**: リリースビルド用のキーのパスワードを環境変数 **"AND_REL_KEY_PASS"** にセットするか、**"YOUR_KEY_PASSWORD"** に記述します。
   
 ```kotlin
 signingConfigs {
@@ -488,7 +489,7 @@ buildTypes {
 
 ### 9.1 デバッグビルドと実行
 
-1. Android Studio の右上にある Gradle Sync のボタンをクリックします。
+1. Android Studio の右上にある **"Gradle Sync"** のボタンをクリックします。
 ![build & run](docs/images/build01.png)
 
 コマンドを利用する場合、以下を実行します。
@@ -497,9 +498,9 @@ cd <プロジェクトフォルダー>
 .\gradlew.bat sync
 ```
 
-2. Android Studio で、**Build** - **Clean Project** を実行します。
+2. Android Studio で、**"Build"** - **"Clean Project"** を実行します。
 
-3. Run ボタン ▷ からデバッグ実行できます。
+3. **"Run"** ボタン ▷ からデバッグ実行できます。
 
 コマンドでデバッグビルドを行う場合、以下を実行します。
 ```powershell
@@ -526,7 +527,7 @@ $env:AND_REL_KEY_PASS = "your_key_password"
 
 4. 作成したリリース用のキーストアが選択されていることを確認し、**Next** をクリックします。
 
-5. **Build Variants** で **release** を選択して、**Create** します。
+5. **"Build Variants"** で **"release"** を選択して、**"Create"** します。
 ![build & run](docs/images/build02.png)
 
 ビルドに成功すると、以下の通知が表示されます。
