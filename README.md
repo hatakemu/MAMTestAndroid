@@ -8,7 +8,7 @@
 
 ### 1.1 JDK 17 のダウンロードとインストール
 
-1. [Adoptium Temurin JDK 17](https://adoptium.net/temurin/releases?version=17&os=any&arch=any) から、JDK 17 - LTS の Windows 版をダウンロードします。
+1. <a href="https://adoptium.net/temurin/releases?version=17&os=any&arch=any" target="_blank">Adoptium Temurin JDK 17</a> から、JDK 17 - LTS の Windows 版をダウンロードします。
 
 2. ダウンロードしたインストーラーを実行してインストールします。
 
@@ -40,11 +40,11 @@ javac 17.0.17
 
 ### 2.1 Android Studio のダウンロードとインストール
 
-1. [Android Studio とアプリツールのダウンロード - Android デベロッパー](https://developer.android.com/studio) から Windows 64 bit 用のインストーラーをダウンロードします。
+1. <a href="https://developer.android.com/studio" target="_blank">Android Studio とアプリツールのダウンロード - Android デベロッパー</a> から Windows 64 bit 用のインストーラーをダウンロードします。
 
 2. ダウンロードしたインストーラーを実行してインストールします。
 
-**注意**: アンインストールが必要な場合は、[こちらのサイト](https://codeforfun.jp/how-to-completely-uninstall-android-studio/) が参考になります。（コントロールパネルからアンインストールするだけでは、多くのコンポーネントが残ります。）
+**注意**: アンインストールが必要な場合は、<a href="https://codeforfun.jp/how-to-completely-uninstall-android-studio/" target="_blank">こちらのサイト</a> が参考になります。（コントロールパネルからアンインストールするだけでは、多くのコンポーネントが残ります。）
 
 ### 2.2 初回セットアップ
 
@@ -127,7 +127,7 @@ cd C:\Users\<ユーザー名>\AndroidStudioProjects
 git clone https://github.com/hatakemu/MAMTestAndroid.git <任意のプロジェクト名>
 ```
 
-Git を使っていない場合には、[MAMTestAndroid](https://github.com/hatakemu/MAMTestAndroid) から ZIP ファイルをダウンロードして、`C:\Users\<ユーザー名>\AndroidStudioProjects` 配下に展開してください。
+Git を使っていない場合には、<a href="https://github.com/hatakemu/MAMTestAndroid" target="_blank">MAMTestAndroid</a> から ZIP ファイルをダウンロードして、`C:\Users\<ユーザー名>\AndroidStudioProjects` 配下に展開してください。
 
 ![Download project from github](docs/images/github01.png)
 
@@ -170,18 +170,18 @@ Android Enterprise に Managed Google Play から限定公開アプリとして�
 ![Generate key for release build](docs/images/releasekey03.png)
 
 4. キーストア情報を入力します。
-   - **Key store path**: キーストアファイルの保存場所を指定
-   - **Password**: キーストアのパスワードを設定
+   - **Key store path**: キーストアファイルの保存場所 (.jks まで入力)
+   - **Password**: キーストアのパスワード
    - **Key Alias**: キーのエイリアス名
-   - **Key Password**: キーのパスワードを設定
+   - **Key Password**: キーのパスワード
    - **Validity (years)**: 有効期限
-   - **Certificate**: 発行者情報を入力
+   - **Certificate**: 発行者情報
      - "First and Last Name": 氏名
      - "Organizational Unit": 部署名
      - "Organization": 組織名
      - "City or Locality": 市区町村
      - "State or Province": 都道府県
-     - "Country Code (XX)": 国コード（JP）
+     - "Country Code (XX)": 国コード
 
 ![Generate key for release build](docs/images/releasekey04.png)
 
@@ -296,7 +296,7 @@ cd <プロジェクトフォルダーのパス>
 
 ### 7.1 アプリの登録
 
-[Entra 管理センター](https://entra.microsoft.com) で **アプリの登録** から新規アプリを登録します。**名前** には任意のアプリ名を入力し、そのまま **登録** します。
+<a href="https://entra.microsoft.com" target="_blank">Entra 管理センター</a> で **アプリの登録** から新規アプリを登録します。**名前** には任意のアプリ名を入力し、そのまま **登録** します。
 ![Register a new app](docs/images/entraapp01.png)
 
 ### 7.2 プラットフォームとリダイレクト URI の設定
@@ -315,7 +315,7 @@ cd <プロジェクトフォルダーのパス>
 3. 上記で追加したプラットフォーム構成の **URI の追加** から **パッケージ名** と **署名ハッシュ** を追加します。
 
 - **パッケージ名**: **手順 6** で指定した **Application ID** (例: `jp.co.android.mamapp`)
-- **署名ハッシュ**: **手順 5** で取得した **デバッグ用のキーハッシュ値**
+- **署名ハッシュ**: **手順 5** で取得した **リリース用のキーハッシュ値**
 ![Register a new app](docs/images/entraapp05.png)
 
 4. **保存** します。
@@ -402,7 +402,7 @@ object AppConfig {
 以下をそれぞれの環境に合わせて設定します。
    - **YOUR_CLIENT_ID_HERE**: 手順 7 で登録した Entra アプリの App ID
    - **YOUR_PACKAGE_NAME**: 手順 6 で指定した Application ID (例: `jp.co.android.mamapp`)
-   - **YOUR_RELEASE_SIGNATURE_HASH**: 手順 5 で取得した デバッグ用のキーハッシュ値
+   - **YOUR_RELEASE_SIGNATURE_HASH**: 手順 5 で取得した リリース用のキーハッシュ値
    - **YOUR_TENANT_ID_HERE**: Entra のテナント ID
 
 ```json
@@ -434,10 +434,10 @@ object AppConfig {
 
 以下をそれぞれの環境に合わせて設定します。
    - **storeFile**: 手順 4 で作成したリリースビルド用のキーストアのパス
-   - **storePassword**: 手順 4 で作成したリリースビルド用のキーストアのパスワード
+   - **storePassword**: 手順 4 で作成したリリースビルド用のキーストアのパスワード<br>
    環境変数 **AND_REL_KEYSTORE_PASS** にセットするか、**YOUR_KEYSTORE_PASSWORD** に記述します。
    - **keyAlias**: 手順 4 で作成したリリースビルド用のキーのエイリアス
-   - **keyPassword**: 手順 4 で作成したリリースビルド用のキーのパスワード
+   - **keyPassword**: 手順 4 で作成したリリースビルド用のキーのパスワード<br>
    環境変数**AND_REL_KEY_PASS** にセットするか、**YOUR_KEY_PASSWORD** に記述します。
   
 ```kotlin
