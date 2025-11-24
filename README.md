@@ -8,7 +8,7 @@
 
 ### 1.1 JDK 17 のダウンロードとインストール
 
-1. <a href="https://adoptium.net/temurin/releases?version=17&os=any&arch=any" target="_blank">Adoptium Temurin JDK 17</a> から、JDK 17 - LTS の Windows 版をダウンロードします。
+1. [Adoptium Temurin JDK 17](https://adoptium.net/temurin/releases?version=17&os=any&arch=any) から、JDK 17 - LTS の Windows 版をダウンロードします。
 
 2. ダウンロードしたインストーラーを実行してインストールします。
 
@@ -40,11 +40,11 @@ javac 17.0.17
 
 ### 2.1 Android Studio のダウンロードとインストール
 
-1. <a href="https://developer.android.com/studio" target="_blank">Android Studio とアプリツールのダウンロード - Android デベロッパー</a> から Windows 64 bit 用のインストーラーをダウンロードします。
+1. [Android Studio とアプリツールのダウンロード - Android デベロッパー](https://developer.android.com/studio) から Windows 64 bit 用のインストーラーをダウンロードします。
 
 2. ダウンロードしたインストーラーを実行してインストールします。
 
-**注意**: アンインストールが必要な場合は、<a href="https://codeforfun.jp/how-to-completely-uninstall-android-studio/" target="_blank">こちらのサイト</a> が参考になります。（コントロールパネルからアンインストールするだけでは、多くのコンポーネントが残ります。）
+**注意**: アンインストールが必要な場合は、[こちらのサイト](https://codeforfun.jp/how-to-completely-uninstall-android-studio/) が参考になります。（コントロールパネルからアンインストールするだけでは、多くのコンポーネントが残ります。）
 
 ### 2.2 初回セットアップ
 
@@ -127,7 +127,7 @@ cd C:\Users\<ユーザー名>\AndroidStudioProjects
 git clone https://github.com/hatakemu/MAMTestAndroid.git <任意のプロジェクト名>
 ```
 
-Git を使っていない場合には、<a href="https://github.com/hatakemu/MAMTestAndroid" target="_blank">MAMTestAndroid</a> から ZIP ファイルをダウンロードして、`C:\Users\<ユーザー名>\AndroidStudioProjects` 配下に展開してください。
+Git を使っていない場合には、[MAMTestAndroid](https://github.com/hatakemu/MAMTestAndroid) から ZIP ファイルをダウンロードして、`C:\Users\<ユーザー名>\AndroidStudioProjects` 配下に展開してください。
 
 ![Download project from github](docs/images/github01.png)
 
@@ -296,7 +296,7 @@ cd <プロジェクトフォルダーのパス>
 
 ### 7.1 アプリの登録
 
-<a href="https://entra.microsoft.com" target="_blank">Entra 管理センター</a> で **アプリの登録** から新規アプリを登録します。**名前** には任意のアプリ名を入力し、そのまま **登録** します。
+[Entra 管理センター](https://entra.microsoft.com) で **アプリの登録** から新規アプリを登録します。**名前** には任意のアプリ名を入力し、そのまま **登録** します。
 ![Register a new app](docs/images/entraapp01.png)
 
 ### 7.2 プラットフォームとリダイレクト URI の設定
