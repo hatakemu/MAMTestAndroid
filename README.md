@@ -1,6 +1,5 @@
 # Microsoft Intune MAM Test アプリ 
-
-MAMTest プロジェクトを自分の環境でビルド・実行するための手順を説明します。
+本プロジェクトは、Intune SDK と MSAL を利用して、MAM を適用できるようにした Android のサンプルアプリです。 本プロジェクトを自分の環境でビルド/実行するための手順を説明します。
 
 <details>
 <summary><h2>1. JDK のインストール</h2></summary>
@@ -78,7 +77,7 @@ javac 17.0.17
 
 2. `C:\Users\<ユーザー名>\.android\debug.keystore` が作成されたことを確認します。
    プロジェクトをクローンする場合には、新しいプロジェクトは不要なので必要に応じて削除します。自分でプロジェクトを作成する場合には、名前や Package name を入力して作成します。
-   Package name は一意である必要があり、後に作成する Entra アプリにも指定するものです。
+   Package name (Application ID)  は一意である必要があり、後に作成する Entra アプリにも指定するものです。
 
 ### 2.5 Android SDK 環境変数の設定
 
@@ -134,10 +133,17 @@ Git を使っていない場合には、[MAMTestAndroid](https://github.com/hata
 
 Android Studio で **"File"** - **"Open"** から展開したプロジェクトフォルダーを選択すると、Android Studio 上のプロジェクトとして読み込まれるはずです。
 
+一度クリーンビルドを行い、ビルドが通ることを確認します。
+
+```powershell
+cd <プロジェクトフォルダーのパス>
+.\gradlew.bat clean
+.\gradlew.bat assembleDebug
+```
+
 **ビルドエラーが表示される場合**  
 この時点でビルドエラーが表示される場合、以下をお試しください。
 - PC を再起動後、`app/build` および `app/release` フォルダを削除します
-- Android Studio を起動して、**"Build"** - **"Clean Project"** を実行します
 - Android Studio から、**"File"** - **"Invalidate Caches"** を開き、**"Invalidate and Restart"** を実行します
 
 上記を実施してもビルドエラー（デバッグモード）が取れない場合には、VS Code でプロジェクトを開き、エラー内容について Github Copilot に対応を聞くと、だいたい対処してくれます。現時点では、リリースモードのキーストアが作成されていないため、リリースモードでのビルドは失敗します。
@@ -232,17 +238,16 @@ PS C:\WINDOWS\system32> $base64Std
 </details>
 
 <details>
-<summary><h2>6. パッケージ名の変更（任意）</h2></summary>
+<summary><h2>6. Application ID の変更</h2></summary>
 
-本アプリのパッケージ名は `com.hatakemu.android.mamtest` です。自分独自のパッケージ名（例：`jp.co.android.mamapp` を使用したい場合、以下の手順で変更します。
+本アプリの Application ID は `com.hatakemu.android.mamtest` です。Application ID は一意である必要があるため、自分独自の Application ID（例：`jp.co.android.mamapp`）に変更する必要があります。
 
-### 6.1 build.gradle.ktsの変更
+### 6.1 build.gradle.kts での Application ID 変更
 
-**ファイル**: `app/build.gradle.kts` の **namespace** と **applicationId** を変更します。
+**ファイル**: `app/build.gradle.kts` の **applicationId** を変更します。
 
 ```kotlin
 android {
-    namespace = "jp.co.android.mamapp" ★
     defaultConfig {
         applicationId = "jp.co.android.mamapp" ★
         // ...
@@ -250,42 +255,7 @@ android {
 }
 ```
 
-### 6.2 フォルダ構造の手動作成
-
-`app/src/main/java/` 配下に新しいフォルダ構造を作成します。
-
-```
-app/src/main/java/
-└── jp/
-    └── co/
-        └── android/
-            └── mamapp/
-```
-
-### 6.3 ファイルの移動とpackage宣言の変更
-
-1. 既存の`.kt`ファイルを新しいフォルダに移動します。
-
-2. 各ファイルの先頭の`package`宣言を変更します。
-
-```kotlin
-// 変更前
-package com.hatakemu.android.mamtest
-
-// 変更後  
-package jp.co.android.mamapp
-```
-
-### 6.4 import文の一括置換
-
-VS Codeの検索・置換機能などを使用して、パッケージ名を置き換えます。
-
-- **検索**: `com.hatakemu.android.mamtest`
-- **置換**: `jp.co.android.mamapp`
-- **対象**: `**/*.kt`, `**/*.xml`, `**/*.json`
-
-
-### 6.5 AndroidManifest.xmlの更新
+### 6.2 AndroidManifest.xmlの更新
 
 **ファイル**: `app/src/main/AndroidManifest.xml` の **android:host** を変更します。
 
@@ -296,9 +266,9 @@ VS Codeの検索・置換機能などを使用して、パッケージ名を置�
     android:path="${redirectPath}" />
 ```
 
-### 6.6 MSAL設定ファイルの更新
+### 6.3 MSAL設定ファイルの更新
 
-**ファイル**: `app/src/debug/res/raw/msal_config.json` および `app/src/release/res/raw/msal_config.json` の **redirect_uri** のパッケージ名部分を変更します。
+**ファイル**: `app/src/debug/res/raw/msal_config.json` および `app/src/release/res/raw/msal_config.json` の **redirect_uri** の Application ID 部分を変更します。
 
 ```json
 {
@@ -307,24 +277,22 @@ VS Codeの検索・置換機能などを使用して、パッケージ名を置�
 }
 ```
 
-### 6.7 クリーンビルド
+### 6.4 クリーンビルド
 
 一度クリーンビルドを行い、ビルドが通ることを確認します。
 
 ```powershell
 cd <プロジェクトフォルダーのパス>
+.\gradlew.bat sync
 .\gradlew.bat clean
 .\gradlew.bat assembleDebug
 ```
-
-### 6.8 旧フォルダの削除
-
-新しいパッケージ構造でビルドが通ることを確認後、`app/src/main/java/com/hatakemu/android/mamtest/` フォルダを削除します。
 
 </details>
 
 <details>
 <summary><h2>7. Entra アプリの登録</h2></summary>
+
 
 ### 7.1 アプリの登録
 
@@ -338,16 +306,16 @@ cd <プロジェクトフォルダーのパス>
 
 2. **パッケージ名** と **署名ハッシュ** をそれぞれ入力して構成します。
 
-- **パッケージ名**: アプリのパッケージ名
-- **署名ハッシュ**: デバッグ用のキーハッシュ値
+- **パッケージ名**: **手順 6** で指定した **Application ID** (例: `jp.co.android.mamapp`)
+- **署名ハッシュ**: **手順 5** で取得した **デバッグ用のキーハッシュ値**
 ![Register a new app](docs/images/entraapp03.png)
 ![Register a new app](docs/images/entraapp04.png)
 
 
 3. 上記で追加したプラットフォーム構成の **URI の追加** から **パッケージ名** と **署名ハッシュ** を追加します。
 
-- **パッケージ名**: アプリのパッケージ名
-- **署名ハッシュ**: リリース用のキーハッシュ値
+- **パッケージ名**: **手順 6** で指定した **Application ID** (例: `jp.co.android.mamapp`)
+- **署名ハッシュ**: **手順 5** で取得した **デバッグ用のキーハッシュ値**
 ![Register a new app](docs/images/entraapp05.png)
 
 4. **保存** します。
@@ -405,9 +373,9 @@ object AppConfig {
 **ファイル**: `app/src/debug/res/raw/msal_config.json`
 
 以下をそれぞれの環境に合わせて設定します。
-   - **YOUR_CLIENT_ID_HERE**: Entra アプリの App ID
-   - **YYOUR_PACKAGE_NAME**: パッケージ名
-   - **YOUR_DEBUG_SIGNATURE_HASH**: デバッグ用のキーのハッシュ値
+   - **YOUR_CLIENT_ID_HERE**: 手順 7 で登録した Entra アプリの App ID
+   - **YOUR_PACKAGE_NAME**: 手順 6 で指定した Application ID (例: `jp.co.android.mamapp`)
+   - **YOUR_DEBUG_SIGNATURE_HASH**: 手順 5 で取得した デバッグ用のキーハッシュ値
    - **YOUR_TENANT_ID_HERE**: Entra のテナント ID
 
 ```json
@@ -432,9 +400,9 @@ object AppConfig {
 **ファイル**: `app/src/release/res/raw/msal_config.json`
 
 以下をそれぞれの環境に合わせて設定します。
-   - **YOUR_CLIENT_ID_HERE**: Entra アプリの App ID
-   - **YYOUR_PACKAGE_NAME**: パッケージ名
-   - **YOUR_RELEASE_SIGNATURE_HASH**: リリース用のキーのハッシュ値
+   - **YOUR_CLIENT_ID_HERE**: 手順 7 で登録した Entra アプリの App ID
+   - **YOUR_PACKAGE_NAME**: 手順 6 で指定した Application ID (例: `jp.co.android.mamapp`)
+   - **YOUR_RELEASE_SIGNATURE_HASH**: 手順 5 で取得した デバッグ用のキーハッシュ値
    - **YOUR_TENANT_ID_HERE**: Entra のテナント ID
 
 ```json
@@ -457,7 +425,7 @@ object AppConfig {
 ```
 
 **注意**
-**msal_config.json** に記述するハッシュ値は、URLエンコードする必要があります。最後の **=** は **%3D** に置き換えてください。(Entra のアプリの **MSAL 構成** に表示されている redirect_uri をそのまま記述してください。) 
+**msal_config.json** に記述するハッシュ値は、URLエンコードする必要があります。最後の **=** は **%3D** に置き換えてください。(Entra アプリの **MSAL 構成** に表示されている redirect_uri をそのまま記述してください。) 
 
 
 ### 8.3 build.gradle.kts の署名設定更新
@@ -465,15 +433,17 @@ object AppConfig {
 **ファイル**: `app/build.gradle.kts`
 
 以下をそれぞれの環境に合わせて設定します。
-   - **storeFile**: リリースビルド用のキーストアのパスを記述します。
-   - **storePassword**: リリースビルド用のキーストアのパスワードを環境変数 **AND_REL_KEYSTORE_PASS** にセットするか、**YOUR_KEYSTORE_PASSWORD** に記述します。
-   - **keyAlias**: リリースビルド用のキーのエイリアスを記述します。
-   - **keyPassword**: リリースビルド用のキーのパスワードを環境変数 **AND_REL_KEY_PASS** にセットするか、**YOUR_KEY_PASSWORD** に記述します。
+   - **storeFile**: 手順 4 で作成したリリースビルド用のキーストアのパス
+   - **storePassword**: 手順 4 で作成したリリースビルド用のキーストアのパスワード
+   環境変数 **AND_REL_KEYSTORE_PASS** にセットするか、**YOUR_KEYSTORE_PASSWORD** に記述します。
+   - **keyAlias**: 手順 4 で作成したリリースビルド用のキーのエイリアス
+   - **keyPassword**: 手順 4 で作成したリリースビルド用のキーのパスワード
+   環境変数**AND_REL_KEY_PASS** にセットするか、**YOUR_KEY_PASSWORD** に記述します。
   
 ```kotlin
 signingConfigs {
     create("release") {
-        storeFile = file("C:\\path\\to\\your\\release.keystore")
+        storeFile = file("C:\\path\\to\\your\\release.jks")
         storePassword = System.getenv("AND_REL_KEYSTORE_PASS") ?: "YOUR_KEYSTORE_PASSWORD"
         keyAlias = "key0"
         keyPassword = System.getenv("AND_REL_KEY_PASS") ?: "YOUR_KEY_PASSWORD"
@@ -481,8 +451,8 @@ signingConfigs {
 }
 ```
 
-- **YOUR_DEBUG_HASH**: デバッグ用のキーのハッシュを指定します。
-- **YOUR_RELEASE_HASH**: リリース用のキーのハッシュを指定します。
+- **YOUR_DEBUG_HASH**: 手順 5 で取得したデバッグ用のキーのハッシュを指定します。
+- **YOUR_RELEASE_HASH**: 手順 5 で取得したリリース用のキーのハッシュを指定します。
 
 ```kotlin
 buildTypes {
@@ -538,6 +508,9 @@ MAM を適用するためには、ポータルサイトアプリをデバイス�
 $env:AND_REL_KEYSTORE_PASS = "your_keystore_password"
 $env:AND_REL_KEY_PASS = "your_key_password"
 ```
+
+**注意**
+環境変数を設定した場合、設定した環境変数を読み込ませるために Android Studio を一度再起動する必要があります。
 
 2. Android Studio で **"Build"** → **"Generate Signed App Bundle or APK..."** を選択します。
 
