@@ -355,7 +355,7 @@ cd <プロジェクトフォルダーのパス>
 
 **ファイル**: `app/src/main/java/com/hatakemu/android/mamtest/config/AppConfig.kt`
 
-**YOUR_TENANT_ID_HERE** にそれぞれの環境のテナント ID を設定します。
+**YOUR_TENANT_ID_HERE** に自分の環境のテナント ID を設定します。
 
 ```kotlin
 object AppConfig {
@@ -433,12 +433,12 @@ object AppConfig {
 **ファイル**: `app/build.gradle.kts`
 
 以下をそれぞれの環境に合わせて設定します。
-   - **storeFile**: 手順 4 で作成したリリースビルド用のキーストアのパス
-   - **storePassword**: 手順 4 で作成したリリースビルド用のキーストアのパスワード<br>
+   - **storeFile**: 手順 4 で作成した リリース用のキーストアのパス
+   - **storePassword**: 手順 4 で作成した リリース用のキーストアのパスワード<br>
    環境変数 **AND_REL_KEYSTORE_PASS** にセットするか、**YOUR_KEYSTORE_PASSWORD** に記述します。
-   - **keyAlias**: 手順 4 で作成したリリースビルド用のキーのエイリアス
-   - **keyPassword**: 手順 4 で作成したリリースビルド用のキーのパスワード<br>
-   環境変数**AND_REL_KEY_PASS** にセットするか、**YOUR_KEY_PASSWORD** に記述します。
+   - **keyAlias**: 手順 4 で作成した リリース用のキーのエイリアス
+   - **keyPassword**: 手順 4 で作成した リリース用のキーのパスワード<br>
+   環境変数 **AND_REL_KEY_PASS** にセットするか、**YOUR_KEY_PASSWORD** に記述します。
   
 ```kotlin
 signingConfigs {
@@ -451,8 +451,8 @@ signingConfigs {
 }
 ```
 
-- **YOUR_DEBUG_HASH**: 手順 5 で取得したデバッグ用のキーのハッシュを指定します。
-- **YOUR_RELEASE_HASH**: 手順 5 で取得したリリース用のキーのハッシュを指定します。
+- **YOUR_DEBUG_HASH**: 手順 5 で取得した デバッグ用のキーハッシュ値
+- **YOUR_RELEASE_HASH**: 手順 5 で取得した リリース用のキーハッシュ値
 
 ```kotlin
 buildTypes {
