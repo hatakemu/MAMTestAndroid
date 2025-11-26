@@ -525,7 +525,7 @@ $env:AND_REL_KEY_PASS = "your_key_password"
 ![build & run](docs/images/build03.png)
 
 locate のリンク先（`<プロジェクトフォルダー>\app\release`）に `app-release.apk` が作成されます。
-Google Managed Play の限定公開アプリとして、このリリースビルド用の `.apk` をアップロードして公開し、デバイスに配布することができます。
+Google Managed Play の限定公開アプリとして、このリリースビルドの `.apk` をアップロードして公開し、デバイスに配布することができます。
 
 **注意**
 `.apk` を更新したい場合には、`app/build.gradle.kts` でアプリのバージョンを上げないと、Google Play 側で蹴られてしまうので注意してください。
