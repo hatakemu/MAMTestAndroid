@@ -11,7 +11,8 @@ import com.microsoft.identity.client.exception.MsalException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.hatakemu.android.mamtest.R
-
+import com.hatakemu.android.mamtest.config.AppConfig
+import com.microsoft.identity.client.AcquireTokenSilentParameters
 /**
  * MSAL (Android) 6.x シングルアカウント PCA ラッパー
  *
@@ -99,6 +100,25 @@ object AuthClient {
 
         // 6.x：SignInParameters を渡して signIn() を呼ぶ
         app.signIn(params)
+    }
+
+
+    /**
+     * サイレントでアクセストークンを取得する。
+     * @param context アプリケーションコンテキスト
+     * @param scopes 要求するスコープ（例: listOf("https://graph.microsoft.com/Files.ReadWrite")）
+     * @return アクセストークン（取得できなければ null）
+     */
+    suspend fun getTokenSilent(context: Context, scopes: List<String>): String? {
+        return withClient(context) { app ->
+            val account = app.currentAccount?.currentAccount ?: return@withClient null
+            val params = AcquireTokenSilentParameters.Builder()
+                .forAccount(account)
+                .fromAuthority(AppConfig.TENANT_AUTHORITY)
+                .withScopes(scopes)
+                .build()
+            app.acquireTokenSilent(params)?.accessToken
+        }
     }
 
 

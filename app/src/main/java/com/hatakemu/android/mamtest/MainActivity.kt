@@ -27,6 +27,7 @@ import com.microsoft.identity.client.AuthenticationCallback
 import com.microsoft.identity.client.IAuthenticationResult
 import com.microsoft.identity.client.Logger
 import com.microsoft.identity.client.exception.MsalException
+import com.microsoft.identity.client.exception.MsalIntuneAppProtectionPolicyRequiredException
 import com.hatakemu.android.mamtest.auth.AuthClient
 import com.hatakemu.android.mamtest.config.AppConfig
 import com.microsoft.intune.mam.client.app.MAMComponents
@@ -43,8 +44,8 @@ private fun Context.findActivity(): Activity? {
 }
 
 
-// Sign-in 用の MAM リソース
-private const val MAM_SIGNIN_SCOPE = AppConfig.MAM_SIGNIN_SCOPE
+// 定数定義
+private const val APP_SIGNIN_SCOPE = AppConfig.APP_SIGNIN_SCOPE
 private const val TENANT_ID = AppConfig.TENANT_ID
 private const val TENANT_AUTHORITY = AppConfig.TENANT_AUTHORITY
 
@@ -193,7 +194,7 @@ class MainActivity : ComponentActivity() {
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // --- Sign in（対話：MAM リソース） ---
+                            // --- Sign in ---
                             Button(
                                 enabled = !isSignedIn,
                                 onClick = {
@@ -229,7 +230,7 @@ class MainActivity : ComponentActivity() {
                                                         e
                                                     )
                                                 }
-
+/*
                                                 // remediateCompliance を利用して MAM 適用
                                                 if (upn.isNotBlank() && aadId.isNotBlank()) {
                                                     val complianceManager =
@@ -245,7 +246,7 @@ class MainActivity : ComponentActivity() {
                                                 } else {
                                                     Log.e("MAM-Compliance", "Cannot remediate: UPN or AAD ID is empty")
                                                 }
-
+*/
                                                 coroutineScope.launch {
                                                     snackbarHostState.showSnackbar("MAM enrolled: $upn")
                                                 }
@@ -253,7 +254,7 @@ class MainActivity : ComponentActivity() {
                                             } else {
                                                 AuthClient.signInInteractive(
                                                     activity = activity,
-                                                    scopes = arrayOf(MAM_SIGNIN_SCOPE),
+                                                    scopes = arrayOf(APP_SIGNIN_SCOPE),
                                                     callback = object : AuthenticationCallback {
                                                         override fun onSuccess(result: IAuthenticationResult) {
                                                             val upn = result.account?.username ?: ""
@@ -288,7 +289,7 @@ class MainActivity : ComponentActivity() {
                                                             coroutineScope.launch {
                                                                 snackbarHostState.showSnackbar("Signed in & MAM enrolled: $upn")
                                                             }
-
+/*
                                                             // remediateCompliance を利用して MAM 適用
                                                             if (upn.isNotBlank() && aadId.isNotBlank()) {
                                                                 val complianceManager =
@@ -304,6 +305,7 @@ class MainActivity : ComponentActivity() {
                                                             } else {
                                                                 Log.e("MAM-Compliance", "Cannot remediate: UPN or AAD ID is empty")
                                                             }
+ */
                                                         }
 
                                                         override fun onError(exception: MsalException) {
@@ -312,8 +314,52 @@ class MainActivity : ComponentActivity() {
                                                                 "SignIn Error: ${exception.errorCode} - ${exception.message}",
                                                                 exception
                                                             )
-                                                            coroutineScope.launch {
-                                                                snackbarHostState.showSnackbar("Sign-in 失敗: ${exception.errorCode}")
+                                                            // Intune保護ポリシーが必要な場合のハンドリング
+                                                            if (exception is MsalIntuneAppProtectionPolicyRequiredException) {
+                                                                Log.i("MAM-Compliance", "Intune protection policy required, starting remediation")
+                                                                
+                                                                try {
+                                                                    val complianceManager = MAMComponents.get(MAMComplianceManager::class.java)
+                                                                    if (complianceManager != null) {
+                                                                        // UPNとAADIDを取得
+                                                                        val upn = exception.accountUpn
+                                                                        val aadId = exception.accountUserId
+                                                                        
+                                                                        if (!upn.isNullOrBlank() && !aadId.isNullOrBlank()) {
+                                                                            complianceManager.remediateCompliance(
+                                                                                upn,
+                                                                                aadId,
+                                                                                TENANT_ID,
+                                                                                TENANT_AUTHORITY,
+                                                                                true // showUX
+                                                                            )
+                                                                            Log.i("MAM-Compliance", "remediateCompliance called for UPN: $upn")
+                                                                            
+                                                                            coroutineScope.launch {
+                                                                                snackbarHostState.showSnackbar("保護ポリシーの適用を開始しています...")
+                                                                            }
+                                                                        } else {
+                                                                            Log.w("MAM-Compliance", "UPN or AAD ID is null/empty, cannot remediate")
+                                                                            coroutineScope.launch {
+                                                                                snackbarHostState.showSnackbar("アカウント情報が不足しているため、保護ポリシーを適用できません")
+                                                                            }
+                                                                        }
+                                                                    } else {
+                                                                        Log.e("MAM-Compliance", "MAMComplianceManager is null")
+                                                                        coroutineScope.launch {
+                                                                            snackbarHostState.showSnackbar("MAMComplianceManagerが取得できません")
+                                                                        }
+                                                                    }
+                                                                } catch (e: Exception) {
+                                                                    Log.e("MAM-Compliance", "Failed to remediate compliance: ${e.message}", e)
+                                                                    coroutineScope.launch {
+                                                                        snackbarHostState.showSnackbar("保護ポリシーの適用に失敗しました: ${e.message}")
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                coroutineScope.launch {
+                                                                    snackbarHostState.showSnackbar("Sign-in 失敗: ${exception.errorCode}")
+                                                                }
                                                             }
                                                         }
 
@@ -469,8 +515,53 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 Text(if (fileList.contains(fileName)) "上書き保存" else "保存(新規)")
                             }
+
+
                             OutlinedButton(
-                                onClick = { (context.findActivity() as? MainActivity)?.sharePlainText(fileName, text.text) },
+                                onClick = {
+                                    val activity = context.findActivity() as? MainActivity
+                                    if (activity == null) {
+                                        Log.e("MSAL", "Activity取得失敗")
+                                        return@OutlinedButton
+                                    }
+                                    coroutineScope.launch {
+                                        // 最初にサイレントでトークン取得を試みる
+                                        val appToken = withContext(Dispatchers.IO) {
+                                            AuthClient.getTokenSilent(context, listOf(AppConfig.APP_SIGNIN_SCOPE))
+                                        }
+                                        if (appToken != null) {
+                                            Log.i("MSAL", "Silent token acquired: ${appToken.take(10)}...")
+                                            activity.sharePlainText(fileName, text.text)
+                                        }
+                                        // サイレントでトークン取得に失敗した場合、対話的な認証を要求
+                                        else {
+                                            Log.w("MSAL", "Silent token failed, starting interactive sign-in")
+                                            AuthClient.signInInteractive(
+                                                activity = activity,
+                                                scopes = arrayOf(AppConfig.APP_SIGNIN_SCOPE),
+                                                callback = object : AuthenticationCallback {
+                                                    override fun onSuccess(result: IAuthenticationResult) {
+                                                        val newToken = result.accessToken
+                                                        Log.i("MSAL", "Interactive token acquired: ${newToken.take(10)}...")
+                                                        activity.sharePlainText(fileName, text.text)
+                                                    }
+                                                    override fun onError(exception: MsalException) {
+                                                        Log.e("MSAL", "SignIn Error: ${exception.errorCode} - ${exception.message}", exception)
+                                                        coroutineScope.launch {
+                                                            snackbarHostState.showSnackbar("Sign-in失敗: ${exception.errorCode}")
+                                                        }
+                                                    }
+                                                    override fun onCancel() {
+                                                        Log.w("MSAL", "SignIn Cancelled by user")
+                                                        coroutineScope.launch {
+                                                            snackbarHostState.showSnackbar("キャンセルされました")
+                                                        }
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                },
                                 modifier = Modifier.weight(1f)
                             ) { Text("共有") }
                         }

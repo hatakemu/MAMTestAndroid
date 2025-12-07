@@ -4,6 +4,7 @@
   "redirect_uri": "msauth://com.hatakemu.android.mamtest/8w2Zbr8qkGWysNZAl1DlAgmu1AA%3D",
   "broker_redirect_uri_registered": true,
   "account_mode": "SINGLE",
+  "client_capabilities": "protapp",
   "authorities": [
     {
       "type": "AAD",

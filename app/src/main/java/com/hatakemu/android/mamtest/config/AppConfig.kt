@@ -11,5 +11,7 @@ object AppConfig {
     const val TENANT_AUTHORITY: String = "https://login.microsoftonline.com/$TENANT_ID"
 
     // === アプリ Sign in 時に指定する Scopes ===
-    const val MAM_SIGNIN_SCOPE: String = "https://msmamservice.api.application/.default"
+    // const val APP_SIGNIN_SCOPE: String = "https://msmamservice.api.application/.default"
+    const val APP_SIGNIN_SCOPE: String = "https://graph.microsoft.com/Files.ReadWrite"
+
 }
